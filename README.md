@@ -1,23 +1,16 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/hritvikgupta/Archimyst/main/public/images/archimyst_pink_logo.png" alt="ARCHIMYST" width="600" />
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Terminal%20CLI-ff8888?style=for-the-badge&logo=gnu-bash&logoColor=white&labelColor=1a1a1a" alt="Terminal CLI" />
-</p>
-
+```
+ ▄▄▄       ██████╗  ▄█████╗  ██╗  ██╗ ██╗ ███╗   ███╗ ██╗   ██╗ ███████╗ ████████╗
+ █████╗    ██╔══██╗██╔════╝  ██║  ██║ ██║ ████╗ ████║ ╚██╗ ██╔╝ ██╔════╝ ╚══██╔══╝
+ ██╔══██╗  ██████╔╝██║       ███████║ ██║ ██╔████╔██║  ╚████╔╝  ███████╗    ██║   
+ ███████║  ██╔══██╗██║       ██╔══██║ ██║ ██║╚██╔╝██║   ╚██╔╝   ╚════██║    ██║   
+ ██╔══██║  ██║  ██║╚██████╗  ██║  ██║ ██║ ██║ ╚═╝ ██║    ██║    ███████║    ██║   
+ ╚═╝  ╚═╝  ╚═╝  ╚═╝ ╚═════╝  ╚═╝  ╚═╝ ╚═╝ ╚═╝     ╚═╝    ╚═╝    ╚══════╝    ╚═╝   
+```
 [![Release](https://img.shields.io/badge/release-v1.0.9-blue.svg)](https://github.com/hritvikgupta/Archimyst)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://www.python.org/)
 
-```
- [bold #ff8888] ▄▄▄       ██████╗  ▄█████╗  ██╗  ██╗ ██╗ ███╗   ███╗ ██╗   ██╗ ███████╗ ████████╗[/bold #ff8888]
- [bold #ff8888]█████╗    ██╔══██╗██╔════╝  ██║  ██║ ██║ ████╗ ████║ ╚██╗ ██╔╝ ██╔════╝ ╚══██╔══╝[/bold #ff8888]
- [bold #ff8888]██╔══██╗  ██████╔╝██║       ███████║ ██║ ██╔████╔██║  ╚████╔╝  ███████╗    ██║   [/bold #ff8888]
- [bold #ff8888]███████║  ██╔══██╗██║       ██╔══██║ ██║ ██║╚██╔╝██║   ╚██╔╝   ╚════██║    ██║   [/bold #ff8888]
- [bold #ff8888]██╔══██║  ██║  ██║╚██████╗  ██║  ██║ ██║ ██║ ╚═╝ ██║    ██║    ███████║    ██║   [/bold #ff8888]
- [bold #ff8888]╚═╝  ╚═╝  ╚═╝  ╚═╝ ╚═════╝  ╚═╝  ╚═╝ ╚═╝ ╚═╝     ╚═╝    ╚═╝    ╚══════╝    ╚═╝   [/bold #ff8888]
-```
+
 
 ArchCode Terminal is a professional-grade AI CLI designed for instant understanding and coordinated modifications across million-line codebases. It orchestrates a Council of Agents powered by world-class LLMs, high-fidelity symbol indexing, and a versatile Skill system.
 
