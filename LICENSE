@@ -1,0 +1,74 @@
+MIT License
+
+Copyright (c) 2024 Archimyst
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Educational and Personal Use Notice
+
+This software is provided for educational purposes and personal use. While the
+MIT license permits commercial use, this project is primarily intended for:
+
+1. **Educational Use**: Learning about code indexing, semantic search, and
+   AI-assisted development tools
+2. **Personal Projects**: Enhancing productivity in individual or small-team
+   development workflows
+3. **Research**: Academic study of code analysis techniques and developer tools
+
+### Attribution
+
+If you use this software in educational materials, research papers, or derived
+works, please provide attribution to the original Archimyst project:
+
+```
+ArchCode Terminal CLI by Archimyst
+https://github.com/hritvikgupta/Archimyst
+https://www.archimyst.com
+```
+
+### Derivative Works
+
+When creating derivative works based on this software:
+
+- Maintain the MIT license for your derivative work
+- Include the original copyright notice
+- Document significant changes made to the original codebase
+- Consider contributing improvements back to the original project
+
+### No Warranty for Commercial Use
+
+While the MIT license permits commercial applications, this software is provided
+without warranty or guarantee of fitness for any specific commercial purpose.
+Users employing this software in commercial contexts do so at their own risk
+and are encouraged to thoroughly test and validate the software for their
+specific use cases.
+
+### Privacy and Data
+
+This software processes code locally and may transmit data to third-party AI
+providers when configured to do so. Users are responsible for:
+- Ensuring compliance with their organization's data policies
+- Protecting sensitive code and API keys
+- Understanding the privacy policies of any integrated AI providers
+
+---
+
+For questions about licensing or use cases, contact: hello@archimyst.com

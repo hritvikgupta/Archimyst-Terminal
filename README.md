@@ -1,13 +1,10 @@
-# ArchCode Terminal CLI
+<p align="center">
+  <img src="https://raw.githubusercontent.com/hritvikgupta/Archimyst/main/public/images/archimyst_pink_logo.png" alt="ARCHIMYST" width="600" />
+</p>
 
-```
- ▄▄▄       ██████╗  ▄█████╗  ██╗  ██╗ ██╗ ███╗   ███╗ ██╗   ██╗ ███████╗ ████████╗
-█████╗    ██╔══██╗██╔════╝  ██║  ██║ ██║ ████╗ ████║ ╚██╗ ██╔╝ ██╔════╝ ╚══██╔══╝
-██╔══██╗  ██████╔╝██║       ███████║ ██║ ██╔████╔██║  ╚████╔╝  ███████╗    ██║   
-███████║  ██╔══██╗██║       ██╔══██║ ██║ ██║╚██╔╝██║   ╚██╔╝   ╚════██║    ██║   
-██╔══██║  ██║  ██║╚██████╗  ██║  ██║ ██║ ██║ ╚═╝ ██║    ██║    ███████║    ██║   
-╚═╝  ╚═╝  ╚═╝  ╚═╝ ╚═════╝  ╚═╝  ╚═╝ ╚═╝ ╚═╝     ╚═╝    ╚═╝    ╚══════╝    ╚═╝   
-```
+<p align="center">
+  <img src="https://img.shields.io/badge/Terminal%20CLI-ff8888?style=for-the-badge&logo=gnu-bash&logoColor=white&labelColor=1a1a1a" alt="Terminal CLI" />
+</p>
 
 [![Release](https://img.shields.io/badge/release-v1.0.9-blue.svg)](https://github.com/hritvikgupta/Archimyst)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -227,6 +224,14 @@ We welcome contributions. To get started:
 Please read our [Contribution Guidelines](CONTRIBUTING.md) for more details.
 
 ---
+
+## Code of Conduct
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) to understand the standards we expect from our community.
+
+## Security
+
+If you discover a security vulnerability, please follow our [Security Policy](SECURITY.md) for responsible disclosure.
 
 ## License
 
