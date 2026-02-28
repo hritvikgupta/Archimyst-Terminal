@@ -18,9 +18,7 @@ ArchCode Terminal is a professional-grade AI CLI designed for instant understand
 
 ---
 <p align="center">
-  <a href="https://github.com/hritvikgupta/Archimyst/raw/main/backend/archcode-terminal/Cap%202026-02-13%20at%2021.16.50.mp4">
-    <img src="archimyst_pink_logo.png" alt="Watch Demo Video" width="80%">
-  </a>
+  <img src="overview.png" alt="ArchCode Terminal Overview" width="80%">
 </p>
 
 ## Installation
