@@ -1,0 +1,33 @@
+# Build artifacts
+archcode-cli/build/
+archcode-cli/dist/
+archcode-cli/*.spec
+
+# Virtual environments
+archcode-cli/.build-venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Aider
+.aider*
+
+# Local history/state
+.archcode_history
+archcode-cli/.archcode/
+
+# Release binaries (hosted on GitHub Releases, not in repo)
+public/releases/
+
+# Legacy backups
+archcode-cli/legacy-archcode-terminal-backup/
+archcode-cli/archive/
