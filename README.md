@@ -51,30 +51,37 @@ python -m archcode-cli
 
 ## Key Features
 
-### Council of Agents
-Specialized agents working together to solve complex tasks:
-- **Supervisor Agent**: Orchestrates workflow and delegates tasks
-- **Coder Agent**: Generates and modifies code with surgical precision
-- **Reviewer Agent**: Validates changes and ensures code quality
-- **Executor Agent**: Runs commands and manages the terminal environment
+### Axon Code Intelligence Engine
+High-fidelity code understanding powered by AST parsing (`tree-sitter`) and semantic embeddings (`voyage-code-3`). The Axon engine provides:
+- **Symbol Search**: Natural language queries to find functions, classes, and modules instantly
+- **Context Analysis**: 360-degree view of any symbol — callers, callees, type references, and inheritance
+- **Impact Analysis**: Blast radius assessment before making changes
+- **Community Clustering**: Identifies related code communities and relationships
 
-### Deep Code Indexing
-High-fidelity AST parsing using `tree-sitter` and semantic search with `voyage-code-3` embeddings. Understand your codebase instantly without reading every file.
+### Discovery Workflow
+Archimyst follows a strict discovery protocol for maximum efficiency:
+1. **Graph Search First**: `search_codebase_graph` for natural language understanding
+2. **Context/Impact Analysis**: `axon_context` or `axon_impact` for precise symbol relationships
+3. **Terminal Fallback**: `rg`, `grep`, `find` for config files, strings, and non-code artifacts
+4. **Plan → Approve → Execute**: Structured changes with user approval
 
-### Extensible Skills
-Native support for Model Context Protocol (MCP) and a modular Skill Manager to extend functionality. Deploy microservices, manage infrastructure, and automate workflows with pre-built skills.
+### Extensible Skills System
+Native support for Model Context Protocol (MCP) and a modular Skill Manager:
+- Pre-built skills for microservices deployment, infrastructure management, and workflow automation
+- Skill blueprints for common architectures (e-commerce, streaming, social networks)
+- Custom skill registry for team-specific tooling
 
-### Private Mode
-Use your own API keys (OpenRouter/OpenAI/Anthropic) for zero token limits and maximum privacy. No usage data is stored.
-
-### Performance First
-Local vector storage with `Qdrant` (in-memory persistent mode) for lightning-fast retrieval without Docker overhead.
+### Private & Efficient
+- Bring your own API keys (OpenRouter/OpenAI/Anthropic) for zero token limits
+- Local vector storage with `Qdrant` — no Docker overhead
+- Intelligent context pruning reduces token consumption by up to **50%**
+- No usage data stored when using private mode
 
 ---
 
 ## Agent Capabilities
 
-ArchCode's agents are designed to handle complex software engineering tasks:
+Archimyst is designed to handle complex software engineering tasks autonomously:
 
 ### Debugging & Error Resolution
 - Automatic error detection and root cause analysis
@@ -112,8 +119,8 @@ ArchCode's agents are designed to handle complex software engineering tasks:
 
 ArchCode is engineered for efficiency:
 
-- **Intelligent Context Pruning**: Only sends relevant code symbols to the LLM, reducing noise
-- **Semantic Search Pre-filtering**: Finds exactly what you need before invoking expensive models
+- **Semantic Search Pre-filtering**: Axon finds exactly what you need before invoking LLMs
+- **Intelligent Context Pruning**: Only sends relevant code symbols, reducing noise
 - **Hierarchical Summarization**: Compresses large files into concise representations
 - **Caching Layer**: Reuses previous analysis results for repeated queries
 - **Smart Chunking**: Breaks large files into optimal-sized pieces for processing
@@ -168,26 +175,28 @@ archcode
 | `/search <query>` | Find code symbols using natural language |
 | `/context <symbol>` | Get 360-degree view of any symbol |
 | `/impact <symbol>` | Analyze blast radius before making changes |
+| `/skills` | List, search, and execute available skills |
 | `/connect` | Install new skills or MCP servers |
 | `/reset` | Clear the current session history and context |
-| `/help` | Show all available commands and agents |
+| `/help` | Show all available commands |
 
 ### Example Interaction
 
 ```
 User: Explain how the authentication flow works in the backend.
 
-Supervisor: Coordinating with Coder agent to analyze authentication flow...
+Archimyst: Analyzing authentication flow...
 
-Coder: Found AuthMiddleware.authenticate in src/auth/middleware.py:45
-        Analyzing dependencies...
-        
-        Flow: login() -> validate_credentials() -> generate_token() -> set_cookie()
-        
-        Key files:
-        - src/auth/middleware.py: Entry point
-        - src/auth/service.py: Business logic
-        - src/auth/jwt.py: Token generation
+[search_codebase_graph] → Found AuthMiddleware.authenticate
+[axon_context] → Callers: login(), refresh_token()
+                 Callees: validate_credentials(), generate_token()
+
+Flow: login() → validate_credentials() → generate_token() → set_cookie()
+
+Key files:
+- src/auth/middleware.py: Entry point (AuthMiddleware.authenticate)
+- src/auth/service.py: Business logic
+- src/auth/jwt.py: Token generation
 ```
 
 ---
@@ -199,7 +208,8 @@ Coder: Found AuthMiddleware.authenticate in src/auth/middleware.py:45
 | Embeddings | voyage-code-3 | Optimized for code understanding |
 | Symbol Extraction | tree-sitter | High-fidelity parsing of Python, JS, TS, TSX, Go, and more |
 | Vector Engine | Qdrant | Fast similarity search with local persistence |
-| Agent Framework | Custom orchestration | Low-latency multi-agent collaboration |
+| Agent Framework | LangGraph + Agno | Stateful single-agent orchestration |
+| Code Intelligence | Axon | Graph-based symbol analysis and impact assessment |
 | CLI Interface | prompt-toolkit + rich | Professional terminal experience |
 
 ---
