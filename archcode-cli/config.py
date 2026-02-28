@@ -12,7 +12,7 @@ class Config:
         self.config_file = self.config_dir / "config.json"
         
         # Versioning
-        self.version = "1.2.0"
+        self.version = "1.2.1"
         self.new_version_available = None # Stores version dict if update available
         
         # Defaults (internal storage)
