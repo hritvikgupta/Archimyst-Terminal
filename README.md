@@ -10,6 +10,15 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://www.python.org/)
 
+```
+ [bold #ff8888] ▄▄▄       ██████╗  ▄█████╗  ██╗  ██╗ ██╗ ███╗   ███╗ ██╗   ██╗ ███████╗ ████████╗[/bold #ff8888]
+ [bold #ff8888]█████╗    ██╔══██╗██╔════╝  ██║  ██║ ██║ ████╗ ████║ ╚██╗ ██╔╝ ██╔════╝ ╚══██╔══╝[/bold #ff8888]
+ [bold #ff8888]██╔══██╗  ██████╔╝██║       ███████║ ██║ ██╔████╔██║  ╚████╔╝  ███████╗    ██║   [/bold #ff8888]
+ [bold #ff8888]███████║  ██╔══██╗██║       ██╔══██║ ██║ ██║╚██╔╝██║   ╚██╔╝   ╚════██║    ██║   [/bold #ff8888]
+ [bold #ff8888]██╔══██║  ██║  ██║╚██████╗  ██║  ██║ ██║ ██║ ╚═╝ ██║    ██║    ███████║    ██║   [/bold #ff8888]
+ [bold #ff8888]╚═╝  ╚═╝  ╚═╝  ╚═╝ ╚═════╝  ╚═╝  ╚═╝ ╚═╝ ╚═╝     ╚═╝    ╚═╝    ╚══════╝    ╚═╝   [/bold #ff8888]
+```
+
 ArchCode Terminal is a professional-grade AI CLI designed for instant understanding and coordinated modifications across million-line codebases. It orchestrates a Council of Agents powered by world-class LLMs, high-fidelity symbol indexing, and a versatile Skill system.
 
 [Documentation](https://www.archimyst.com/documentation) • [Installation](https://www.archimyst.com/documentation/installation) • [Quick Start](https://www.archimyst.com/documentation/quickstart) • [API Reference](https://www.archimyst.com/documentation/api)
