@@ -199,11 +199,7 @@ def create_agent(
         description=AGENT_DESCRIPTION,
         instructions=_get_dynamic_instructions,
         skills=skills,
-        model=OpenRouter(
-            id=config.model,
-            api_key=config.openrouter_api_key,
-            max_tokens=16384,
-        ),
+        model=config.get_agno_model(),
         tools=tools,
         # Storage for persistent history & metrics
         db=SqliteDb(db_file=db_path),
@@ -213,10 +209,7 @@ def create_agent(
         enable_session_summaries=True,
         add_session_summary_to_context=True,
         session_summary_manager=SessionSummaryManager(
-            model=OpenRouter(
-                id="openai/gpt-oss-120b",
-                api_key=config.openrouter_api_key,
-            )
+            model=config.get_agno_model(model_id="openai/gpt-oss-120b")
         ),
         # History management
         add_history_to_context=True,

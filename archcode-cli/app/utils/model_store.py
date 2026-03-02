@@ -65,6 +65,24 @@ GROQ_DIRECT_MODELS = [
 ]
 
 
+def _load_together_chat_models():
+    """Load Together AI chat models from JSON."""
+    try:
+        json_path = get_resource_path("together_models.json")
+        if json_path.exists():
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+            return [
+                (m["id"], f"{m['display_name']:40s} — {m.get('organization', 'Together')}")
+                for m in data if m.get("type") == "chat"
+            ]
+    except Exception:
+        pass
+    return []
+
+TOGETHER_DIRECT_MODELS = _load_together_chat_models()
+
+
 def get_available_models(cfg) -> list:
     """Return the combined model list based on configured API keys.
 
@@ -94,10 +112,14 @@ def get_available_models(cfg) -> list:
         for model_id, label in GROQ_DIRECT_MODELS:
             _add(model_id, label)
 
+    # Together AI direct models
+    if cfg._together_api_key:
+        for model_id, label in TOGETHER_DIRECT_MODELS:
+            _add(model_id, label)
+
     # OpenRouter models (when logged in or OpenRouter key is set)
     if cfg._openrouter_api_key or cfg.access_token:
         for item in cfg.available_models:
-            # available_models can be list of tuples or (id, label)
             if isinstance(item, (list, tuple)) and len(item) >= 2:
                 _add(item[0], item[1])
             elif isinstance(item, str):

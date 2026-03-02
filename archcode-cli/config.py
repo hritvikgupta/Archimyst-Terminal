@@ -22,12 +22,23 @@ class Config:
         self._openai_api_key = os.getenv("OPENAI_API_KEY")
         self._anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
         self._groq_api_key = os.getenv("GROQ_API_KEY")
+        self._together_api_key = os.getenv("TOGETHER_API_KEY")
         
         # Secrets synced from backend (in-memory only)
         self.synced_env_vars = {}
         
         self.model = "moonshotai/kimi-k2.5"
         self.mode = "free" 
+        self.agent_mode = "coding"  # "coding" or "data"
+        
+        # Database Configuration (for data agent)
+        self.database_url = os.getenv("DATABASE_URL", "")  # SQLAlchemy connection string
+        self.db_host = os.getenv("DB_HOST", "")            # PostgreSQL host
+        self.db_port = int(os.getenv("DB_PORT", "5432"))   # PostgreSQL port
+        self.db_name = os.getenv("DB_NAME", "postgres")    # Database name
+        self.db_user = os.getenv("DB_USER", "")            # Database user
+        self.db_password = os.getenv("DB_PASSWORD", "")    # Database password
+        
         self.access_token = None
         self.user_email = None
         
@@ -67,6 +78,7 @@ class Config:
                     self.user_email = data.get("user_email")
                     # if data.get("model"): self.model = data.get("model")
                     if data.get("mode"): self.mode = data.get("mode")
+                    if data.get("agent_mode"): self.agent_mode = data.get("agent_mode")
                     if data.get("env_vars"): self.synced_env_vars = data.get("env_vars")
                     if data.get("available_models"): self.available_models = data.get("available_models")
                     # Load API keys (env vars take priority; file fills in when env var absent)
@@ -78,6 +90,15 @@ class Config:
                         self._anthropic_api_key = data.get("anthropic_api_key")
                     if not self._groq_api_key:
                         self._groq_api_key = data.get("groq_api_key")
+                    if not self._together_api_key:
+                        self._together_api_key = data.get("together_api_key")
+                    # Load database config
+                    self.database_url = data.get("database_url", "")
+                    self.db_host = data.get("db_host", "")
+                    self.db_port = data.get("db_port", 5432)
+                    self.db_name = data.get("db_name", "postgres")
+                    self.db_user = data.get("db_user", "")
+                    self.db_password = data.get("db_password", "")
             except Exception as e:
                 console.print(f"[dim]Warning: Could not load config file: {e}[/dim]")
 
@@ -88,12 +109,21 @@ class Config:
             "user_email": self.user_email,
             "model": self.model,
             "mode": self.mode,
+            "agent_mode": self.agent_mode,
             "env_vars": self.synced_env_vars,
             "available_models": self.available_models,
             "openrouter_api_key": self._openrouter_api_key,
             "openai_api_key": self._openai_api_key,
             "anthropic_api_key": self._anthropic_api_key,
             "groq_api_key": self._groq_api_key,
+            "together_api_key": self._together_api_key,
+            # Database configuration (for data agent)
+            "database_url": self.database_url,
+            "db_host": self.db_host,
+            "db_port": self.db_port,
+            "db_name": self.db_name,
+            "db_user": self.db_user,
+            "db_password": self.db_password,
         }
         try:
             with open(self.config_file, 'w') as f:
@@ -104,15 +134,16 @@ class Config:
 
     @property
     def openrouter_api_key(self):
-        return self.synced_env_vars.get("OPENROUTER_API_KEY") or self._openrouter_api_key
+        # User-configured key (from /config or env var) takes priority over backend-synced key
+        return self._openrouter_api_key or self.synced_env_vars.get("OPENROUTER_API_KEY")
 
     @property
     def voyage_api_key(self):
-        return self.synced_env_vars.get("VOYAGE_API_KEY") or self._voyage_api_key
+        return self._voyage_api_key or self.synced_env_vars.get("VOYAGE_API_KEY")
 
     @property
     def tavily_api_key(self):
-        return self.synced_env_vars.get("TAVILY_API_KEY") or self._tavily_api_key
+        return self._tavily_api_key or self.synced_env_vars.get("TAVILY_API_KEY")
 
     @property
     def openai_api_key(self):
@@ -125,6 +156,10 @@ class Config:
     @property
     def groq_api_key(self):
         return self._groq_api_key
+
+    @property
+    def together_api_key(self):
+        return self._together_api_key
 
     # Groq model IDs that should route through the Groq API
     GROQ_MODEL_IDS = {
@@ -150,6 +185,9 @@ class Config:
         "meta-llama/llama-4-maverick-17b-128e-instruct",
     }
 
+    # Together AI model IDs that should route through the Together API
+    TOGETHER_MODEL_IDS = set()  # Populated at module load from together_models.json
+
     @property
     def active_provider(self) -> str:
         """Determine which backend to use for the current model.
@@ -165,7 +203,34 @@ class Config:
             return "openai"
         if self._groq_api_key and m in self.GROQ_MODEL_IDS:
             return "groq"
+        if self._together_api_key and m in self.TOGETHER_MODEL_IDS:
+            return "together"
         return "openrouter"
+
+    def get_agno_model(self, model_id: str = None, max_tokens: int = 16384):
+        """Build an Agno model object based on the active provider.
+
+        Works for any agent (coding, data, summaries).  Falls through to
+        OpenRouter when no provider-specific key matches.
+        """
+        mid = model_id or self.model
+        provider = self.active_provider
+
+        if provider == "together":
+            from agno.models.together import Together
+            return Together(id=mid, api_key=self.together_api_key, max_tokens=max_tokens)
+
+        if provider == "groq":
+            from agno.models.groq import Groq
+            return Groq(id=mid, api_key=self.groq_api_key, max_tokens=max_tokens)
+
+        if provider == "openai":
+            from agno.models.openai import OpenAIChat
+            return OpenAIChat(id=mid, api_key=self.openai_api_key, max_tokens=max_tokens)
+
+        # Default: OpenRouter (covers anthropic models via OpenRouter too)
+        from agno.models.openrouter import OpenRouter
+        return OpenRouter(id=mid, api_key=self.openrouter_api_key, max_tokens=max_tokens)
 
     def validate(self):
         # Check if user has their own API key from environment
@@ -185,6 +250,13 @@ class Config:
             console.print("[dim]No token limits. No usage data stored. Private mode active.[/dim]\n")
             return True
 
+        # Check for Together AI API key
+        if self._together_api_key:
+            self.using_own_key = True
+            console.print(f"[bold green]✓[/bold green] Using your own Together AI API key.")
+            console.print("[dim]No token limits. No usage data stored. Private mode active.[/dim]\n")
+            return True
+
         # Check for OpenAI / Anthropic direct keys — no OpenRouter needed
         if self._openai_api_key or self._anthropic_api_key:
             self.using_own_key = True
@@ -200,39 +272,35 @@ class Config:
             console.print("[dim]Use /model to select a model · /config to manage keys.[/dim]\n")
             return True
 
-        # Check if logged in via backend
+        # Check if logged in via backend (reserved for future cloud support)
         if self.access_token:
             self.using_own_key = False
             return True
-        
-        # Neither API key nor access token - show interactive prompt
+
+        # No API key configured - show interactive prompt
         console.print("[bold yellow]Welcome to ArchCode![/bold yellow]\n")
-        console.print("[dim]Choose how you want to use ArchCode:[/dim]\n")
-        console.print("  [1] [bold #ff8888]/login[/bold #ff8888]     — Login with your Archimyst account (managed usage)")
-        console.print("  [2] [bold #ff8888]Use my key[/bold #ff8888] — Use your own OpenRouter API key (unlimited, private)")
-        console.print("  [3] [bold #ff8888]Skip[/bold #ff8888]       — Continue without authentication (limited features)\n")
-        
-        choice = input("Enter choice [1/2/3]: ").strip()
-        
+        console.print("[dim]Choose how you want to get started:[/dim]\n")
+        console.print("  [1] [bold #ff8888]Use my key[/bold #ff8888] — Use your own API key (unlimited, private)")
+        console.print("  [2] [bold #ff8888]Skip[/bold #ff8888]       — Continue without authentication (limited features)\n")
+        console.print("[dim]  ☁ ArchCode Cloud login is coming soon![/dim]\n")
+
+        choice = input("Enter choice [1/2]: ").strip()
+
         if choice == "1":
-            console.print("\n[dim]Type /login when ready to authenticate.[/dim]\n")
-            return True
-        
-        elif choice == "2":
             console.print("\n[dim]Enter your OpenRouter API key (sk-or-...):[/dim]")
             api_key = input("> ").strip()
-            
+
             if not api_key:
                 console.print("[yellow]No key provided. Continuing in limited mode.[/yellow]\n")
                 return True
-            
+
             if not api_key.startswith("sk-or-"):
                 console.print("[yellow]Warning: OpenRouter keys typically start with 'sk-or-'[/yellow]")
                 confirm = input("Continue anyway? [y/N]: ").strip().lower()
                 if confirm != 'y':
-                    console.print("[dim]Cancelled. Type /login to authenticate.[/dim]\n")
+                    console.print("[dim]Cancelled. Use /config to set your key later.[/dim]\n")
                     return True
-            
+
             # Store the API key for this session only (not persisted)
             self._openrouter_api_key = api_key
             self.using_own_key = True
@@ -240,13 +308,28 @@ class Config:
             console.print("[dim]Supported providers: OpenRouter (with 200+ models)[/dim]")
             console.print("[dim]No token limits. No usage data stored. Private mode activated.[/dim]\n")
             return True
-        
-        elif choice == "3":
-            console.print("\n[dim]Continuing in limited mode. Type /login anytime to authenticate.[/dim]\n")
-            return True
-        
+
         else:
-            console.print("\n[dim]Invalid choice. Type /login to authenticate when ready.[/dim]\n")
+            console.print("\n[dim]Continuing in limited mode. Use /config to set your key anytime.[/dim]\n")
             return True
+
+# Populate Together AI model IDs from JSON
+def _load_together_model_ids():
+    try:
+        # Support both dev mode (Path(__file__).parent) and PyInstaller (_MEIPASS)
+        import sys
+        if hasattr(sys, '_MEIPASS'):
+            _json_path = Path(sys._MEIPASS) / "together_models.json"
+        else:
+            _json_path = Path(__file__).parent / "together_models.json"
+        if _json_path.exists():
+            with open(_json_path, 'r') as f:
+                _data = json.load(f)
+            return {m["id"] for m in _data if m.get("type") == "chat"}
+    except Exception:
+        pass
+    return set()
+
+Config.TOGETHER_MODEL_IDS = _load_together_model_ids()
 
 config = Config()

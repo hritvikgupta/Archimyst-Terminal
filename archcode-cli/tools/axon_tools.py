@@ -1,4 +1,5 @@
 from langchain_core.tools import tool
+import os
 import subprocess
 import shutil
 
@@ -26,10 +27,25 @@ def _run_axon(args: str, timeout: int = 120) -> str:
     return f"Error: {result.stderr.strip()}"
 
 
+def _invalidate_axon_fingerprint():
+    """Remove the cached fingerprint so the next startup re-indexes."""
+    fp_file = os.path.join(os.getcwd(), ".axon", "fingerprint")
+    try:
+        os.remove(fp_file)
+    except (FileNotFoundError, OSError):
+        pass
+
+
 def reindex_axon():
-    """Trigger incremental reindex (called after file changes)."""
+    """Trigger background reindex after a file change.
+
+    Invalidates the fingerprint first so the next CLI startup also
+    picks up the change, then kicks off ``axon analyze .`` in the
+    background.
+    """
     if not _axon_available():
         return
+    _invalidate_axon_fingerprint()
     subprocess.Popen(
         "axon analyze .",
         shell=True,

@@ -32,3 +32,8 @@ inquirer==3.1.4
 chromadb>=0.5.0
 onnxruntime>=1.17.0
 axoniq>=0.2.3
+# Data Agent Tools
+duckdb
+pandas
+openpyxl
+reportlab

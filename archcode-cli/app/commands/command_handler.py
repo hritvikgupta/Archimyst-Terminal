@@ -218,11 +218,14 @@ class CommandHandler:
             return True
 
         if cmd == "/login":
-            self.handle_login()
+            console.print("\n[bold #ff8888]☁ ArchCode Cloud is coming soon![/bold #ff8888]")
+            console.print("[dim]Managed authentication is not yet available.[/dim]")
+            console.print("[dim]Use [bold]/config[/bold] to set your own API key and get started now.[/dim]\n")
             return True
 
         if cmd == "/logout":
-            self.handle_logout()
+            console.print("\n[bold #ff8888]☁ ArchCode Cloud is coming soon![/bold #ff8888]")
+            console.print("[dim]Managed authentication is not yet available. Nothing to log out from.[/dim]\n")
             return True
 
         if cmd == "/config":
@@ -260,6 +263,8 @@ class CommandHandler:
 
         if cmd.startswith("/model"):
             self.change_model(user_input)
+        if cmd.startswith("/mode"):
+            self.change_mode(user_input)
             return True
 
         elif cmd.startswith("/skills"):
@@ -303,8 +308,8 @@ class CommandHandler:
         table.add_row("/task <query>", "Run a query as a background task")
         table.add_row("/tasks", "List all background tasks")
         table.add_row("/task status|logs|cancel|result|rewind <id>", "Manage a background task")
-        table.add_row("/login", "Authenticate with your Archimyst account")
-        table.add_row("/logout", "Clear your local session")
+        table.add_row("/login", "Cloud login (coming soon)")
+        table.add_row("/logout", "Cloud logout (coming soon)")
         table.add_row("exit / quit", "Exit the CLI")
 
 
@@ -558,6 +563,32 @@ class CommandHandler:
         else:
             console.print(f"[red]✘ Error: {message}[/red]")
 
+    def change_mode(self, input_str: str):
+        """Handle /mode command to switch between coding and data agents."""
+        parts = input_str.split()
+        
+        if len(parts) < 2:
+            console.print(f"[dim]Current mode: {config.agent_mode}[/dim]")
+            console.print("[bold]Available modes:[/bold]")
+            console.print("  [cyan]coding[/cyan]  - Coding agent (LangGraph)")
+            console.print("  [cyan]data[/cyan]    - Data analysis agent (Agno)")
+            return
+        
+        mode = parts[1].lower()
+        if mode not in ["coding", "data"]:
+            console.print("[red]Invalid mode. Use: /mode coding or /mode data[/red]")
+            return
+        
+        old_mode = config.agent_mode
+        config.agent_mode = mode
+        config.save_persisted_config()
+        console.print(f"[green]Switched to {mode} mode.[/green]")
+        if old_mode != mode:
+            console.print("[dim]Agent will be recreated for the new mode.[/dim]")
+            config._agent_mode_changed = True
+        else:
+            console.print("[dim]Already in {mode} mode.[/dim]")
+
     def change_model(self, input_str):
         # Load providers from JSON (for OpenRouter provider browsing)
         from app.utils import get_resource_path
@@ -566,6 +597,7 @@ class CommandHandler:
             OPENAI_DIRECT_MODELS,
             ANTHROPIC_DIRECT_MODELS,
             GROQ_DIRECT_MODELS,
+            TOGETHER_DIRECT_MODELS,
         )
         providers_path = get_resource_path("app/utils/openrouter_chat_models_by_provider.json")
         try:
@@ -574,7 +606,176 @@ class CommandHandler:
         except Exception:
             providers = {}
 
-        # Build the default display list from all active providers
+        # --- Reusable interactive selector ---
+        def _interactive_select(items, title, subtitle="", footer="  ↑ ↓ to move • Enter to confirm • Esc to go back"):
+            """Generic interactive arrow-key selector.
+            items: list of display strings.
+            Returns selected index or None if cancelled.
+            """
+            from prompt_toolkit import Application
+            from prompt_toolkit.formatted_text import FormattedText
+            from prompt_toolkit.key_binding import KeyBindings
+            from prompt_toolkit.layout import FormattedTextControl, HSplit, Layout, Window
+            import shutil
+
+            if not items:
+                return None
+
+            term_h = shutil.get_terminal_size().lines
+            max_vis = max(term_h - 6, 10)
+            st = {"selected": 0, "scroll": 0}
+            res = [None]
+
+            def _text():
+                sel = st["selected"]
+                if sel < st["scroll"]:
+                    st["scroll"] = sel
+                elif sel >= st["scroll"] + max_vis:
+                    st["scroll"] = sel - max_vis + 1
+                scroll = st["scroll"]
+                visible = items[scroll:scroll + max_vis]
+
+                parts = [
+                    ("bold", f"\n  {title}  "),
+                    ("dim", subtitle),
+                    ("", "\n"),
+                ]
+                if scroll > 0:
+                    parts.append(("dim", f"    ▲ {scroll} more above\n"))
+                else:
+                    parts.append(("", "\n"))
+
+                for vi, label in enumerate(visible):
+                    actual_i = scroll + vi
+                    if actual_i == sel:
+                        parts.append(("#ff8888 bold reverse", f"  ❯ {label}  "))
+                    else:
+                        parts.append(("", f"    {label}  "))
+                    parts.append(("", "\n"))
+
+                remaining = len(items) - (scroll + max_vis)
+                if remaining > 0:
+                    parts.append(("dim", f"    ▼ {remaining} more below\n"))
+                else:
+                    parts.append(("", "\n"))
+                parts.append(("dim italic", f"{footer}\n"))
+                return FormattedText(parts)
+
+            kb = KeyBindings()
+
+            @kb.add("up")
+            @kb.add("k")
+            def _up(event):
+                if st["selected"] > 0:
+                    st["selected"] -= 1
+
+            @kb.add("down")
+            @kb.add("j")
+            def _down(event):
+                if st["selected"] < len(items) - 1:
+                    st["selected"] += 1
+
+            @kb.add("pageup")
+            def _pgup(event):
+                st["selected"] = max(0, st["selected"] - max_vis)
+
+            @kb.add("pagedown")
+            def _pgdn(event):
+                st["selected"] = min(len(items) - 1, st["selected"] + max_vis)
+
+            @kb.add("enter")
+            def _select(event):
+                res[0] = st["selected"]
+                event.app.exit()
+
+            @kb.add("c-c")
+            @kb.add("escape")
+            def _cancel(event):
+                event.app.exit()
+
+            control = FormattedTextControl(_text)
+            layout = Layout(HSplit([Window(content=control)]))
+            Application(layout=layout, key_bindings=kb, full_screen=False).run()
+            return res[0]
+
+        # --- Provider org helpers ---
+        # Providers that have org-level grouping
+        _ORG_PROVIDERS = {"openrouter", "together", "groq"}
+
+        def _get_provider_orgs(provider_name):
+            """Return sorted list of (org_key, org_display, model_count) for a provider."""
+            if provider_name == "openrouter":
+                return [
+                    (p, p, len(providers[p].get("models", [])))
+                    for p in sorted(providers.keys())
+                ]
+            elif provider_name == "together":
+                orgs = {}
+                for mid, lbl in TOGETHER_DIRECT_MODELS:
+                    parts = lbl.split("—")
+                    org = parts[-1].strip() if len(parts) > 1 else "Unknown"
+                    orgs.setdefault(org, 0)
+                    orgs[org] += 1
+                return [(o, o, c) for o, c in sorted(orgs.items())]
+            elif provider_name == "groq":
+                orgs = {}
+                for mid, lbl in GROQ_DIRECT_MODELS:
+                    parts = lbl.split("—")
+                    org = parts[-1].strip() if len(parts) > 1 else "Unknown"
+                    orgs.setdefault(org, 0)
+                    orgs[org] += 1
+                return [(o, o, c) for o, c in sorted(orgs.items())]
+            return []
+
+        def _get_org_models(provider_name, org_filter):
+            """Return (models_list, add_after_select) for a specific org within a provider."""
+            org_lower = org_filter.lower()
+            if provider_name == "openrouter":
+                if org_filter in providers:
+                    prov_data = providers[org_filter]
+                    ml = []
+                    for m in prov_data["models"]:
+                        cost = float(m.get('pricing', {}).get('completion', 0))
+                        if cost > 0.000003 and not config.using_own_key:
+                            ml.append((m["id"], f"{m['name']} — {m.get('canonical_slug', m['id'])} [Upgrade to enterprise]"))
+                        else:
+                            ml.append((m["id"], f"{m['name']} — {m.get('canonical_slug', m['id'])}"))
+                    return ml, True
+                return [], False
+            elif provider_name == "together":
+                filtered = [
+                    (mid, lbl) for mid, lbl in TOGETHER_DIRECT_MODELS
+                    if lbl.split("—")[-1].strip().lower() == org_lower
+                ]
+                return filtered, False
+            elif provider_name == "groq":
+                filtered = [
+                    (mid, lbl) for mid, lbl in GROQ_DIRECT_MODELS
+                    if lbl.split("—")[-1].strip().lower() == org_lower
+                ]
+                return filtered, False
+            return [], False
+
+        def _show_org_selector(provider_name, provider_display):
+            """Show interactive org selector for a provider. Returns (models_list, add_after_select) or None."""
+            org_list = _get_provider_orgs(provider_name)
+            if not org_list:
+                console.print(f"[red]No organizations found for {provider_display}.[/red]")
+                return None
+            labels = [f"{org_display:20s} [{count} model{'s' if count != 1 else ''}]" for _, org_display, count in org_list]
+            idx = _interactive_select(
+                labels,
+                f"Organizations",
+                f"({provider_display})",
+                "  ↑ ↓ to navigate • Enter to browse models • Esc to go back",
+            )
+            if idx is None:
+                console.print("[dim]Selection cancelled.[/dim]")
+                return None
+            org_key = org_list[idx][0]
+            return _get_org_models(provider_name, org_key)
+
+        # --- Build the default display list from all active providers ---
         models_list = get_available_models(config)
         model_ids = [m[0] for m in models_list]
 
@@ -589,43 +790,95 @@ class CommandHandler:
 
         if len(sub_parts) == 0:
             # /model — show interactive selector with all active-provider models
-            # models_list and model_ids already built above
             pass
         elif len(sub_parts) == 1:
             arg = sub_parts[0]
-            if arg == 'providers':
-                # /model/providers - list providers
-                console.print("Available providers:")
-                for prov in sorted(providers.keys()):
-                    console.print(f"- {prov}")
-                return
-            elif arg == 'provider':
-                # /model/provider - list providers (no name specified)
-                console.print("Available providers:")
-                for prov in sorted(providers.keys()):
-                    console.print(f"- {prov}")
-                return
+            if arg in ('providers', 'provider'):
+                # /model/providers — interactive provider selector (only providers with API keys)
+                provider_entries = []  # (key, display_label)
+                if config._openrouter_api_key or config.access_token:
+                    total_or = sum(len(providers[p].get("models", [])) for p in providers)
+                    provider_entries.append(("openrouter", f"OpenRouter         [{total_or} models across {len(providers)} orgs]"))
+                if config._together_api_key:
+                    tog_orgs = _get_provider_orgs("together")
+                    provider_entries.append(("together", f"Together AI        [{len(TOGETHER_DIRECT_MODELS)} models across {len(tog_orgs)} orgs]"))
+                if config._groq_api_key:
+                    groq_orgs = _get_provider_orgs("groq")
+                    provider_entries.append(("groq", f"Groq               [{len(GROQ_DIRECT_MODELS)} models across {len(groq_orgs)} orgs]"))
+                if config._openai_api_key:
+                    provider_entries.append(("openai", f"OpenAI (Direct)    [{len(OPENAI_DIRECT_MODELS)} models]"))
+                if config._anthropic_api_key:
+                    provider_entries.append(("anthropic", f"Anthropic (Direct) [{len(ANTHROPIC_DIRECT_MODELS)} models]"))
+
+                if not provider_entries:
+                    console.print("[red]No providers configured. Set an API key to get started.[/red]")
+                    return
+
+                labels = [lbl for _, lbl in provider_entries]
+                idx = _interactive_select(
+                    labels,
+                    "Available Providers",
+                    "",
+                    "  ↑ ↓ to navigate • Enter to browse • Esc to close",
+                )
+                if idx is None:
+                    console.print("[dim]Selection cancelled.[/dim]")
+                    return
+
+                selected_provider = provider_entries[idx][0]
+
+                # Org-based providers → show org selector first
+                if selected_provider in _ORG_PROVIDERS:
+                    result = _show_org_selector(selected_provider, provider_entries[idx][1].split("[")[0].strip())
+                    if result is None:
+                        return
+                    models_list, add_after_select = result
+                    model_ids = [m[0] for m in models_list]
+                elif selected_provider == "openai":
+                    models_list = list(OPENAI_DIRECT_MODELS)
+                    model_ids = [m[0] for m in models_list]
+                elif selected_provider == "anthropic":
+                    models_list = list(ANTHROPIC_DIRECT_MODELS)
+                    model_ids = [m[0] for m in models_list]
             else:
-                # Assume direct model ID or virtual/OpenRouter provider name
+                # Assume direct model ID or provider name
                 possible_id = arg
 
-                # Virtual provider: "openai" — browse OpenAI direct models
+                # /model/openai — direct to models (small list)
                 if possible_id == "openai" and config._openai_api_key:
                     models_list = list(OPENAI_DIRECT_MODELS)
                     model_ids = [m[0] for m in models_list]
-                # Virtual provider: "anthropic" — browse Anthropic direct models
+                # /model/anthropic — direct to models (small list)
                 elif possible_id == "anthropic" and config._anthropic_api_key:
                     models_list = list(ANTHROPIC_DIRECT_MODELS)
                     model_ids = [m[0] for m in models_list]
-                # Virtual provider: "groq" — browse Groq direct models
+                # /model/groq — show org selector
                 elif possible_id == "groq" and config._groq_api_key:
-                    models_list = list(GROQ_DIRECT_MODELS)
+                    result = _show_org_selector("groq", "Groq")
+                    if result is None:
+                        return
+                    models_list, add_after_select = result
                     model_ids = [m[0] for m in models_list]
+                # /model/together — show org selector
+                elif possible_id == "together" and config._together_api_key:
+                    result = _show_org_selector("together", "Together AI")
+                    if result is None:
+                        return
+                    models_list, add_after_select = result
+                    model_ids = [m[0] for m in models_list]
+                # /model/openrouter — show org selector
+                elif possible_id == "openrouter" and (config._openrouter_api_key or config.access_token):
+                    result = _show_org_selector("openrouter", "OpenRouter")
+                    if result is None:
+                        return
+                    models_list, add_after_select = result
+                    model_ids = [m[0] for m in models_list]
+                # /model/<openrouter-org> — direct OpenRouter org shortcut
                 elif possible_id in providers:
                     prov_data = providers[possible_id]
-                    models = prov_data["models"]
+                    mods = prov_data["models"]
                     models_list = []
-                    for m in models:
+                    for m in mods:
                         cost = float(m.get('pricing', {}).get('completion', 0))
                         if cost > 0.000003 and not config.using_own_key:
                             models_list.append((m["id"], f"{m['name']} — {m.get('canonical_slug', m['id'])} [Upgrade to enterprise]"))
@@ -642,10 +895,57 @@ class CommandHandler:
                 else:
                     console.print(f"[red]Unknown model ID: {possible_id}[/red]")
                     return
+        elif len(sub_parts) == 2:
+            # /model/<provider>/<org> — filter by org within a provider
+            prov_key = sub_parts[0].lower()
+            org_key = sub_parts[1]
+
+            if prov_key == "openrouter" and (config._openrouter_api_key or config.access_token):
+                ml, aas = _get_org_models("openrouter", org_key)
+                if not ml:
+                    console.print(f"[red]No OpenRouter org matching '{org_key}'.[/red]")
+                    console.print(f"[dim]Available orgs: {', '.join(sorted(providers.keys())[:10])}...[/dim]")
+                    return
+                models_list, add_after_select = ml, aas
+                model_ids = [m[0] for m in models_list]
+            elif prov_key == "together" and config._together_api_key:
+                ml, aas = _get_org_models("together", org_key)
+                if not ml:
+                    orgs = set()
+                    for mid, lbl in TOGETHER_DIRECT_MODELS:
+                        orgs.add(lbl.split("—")[-1].strip())
+                    console.print(f"[red]No Together models matching org '{org_key}'.[/red]")
+                    console.print(f"[dim]Available orgs: {', '.join(sorted(orgs))}[/dim]")
+                    return
+                models_list, add_after_select = ml, aas
+                model_ids = [m[0] for m in models_list]
+            elif prov_key == "groq" and config._groq_api_key:
+                ml, aas = _get_org_models("groq", org_key)
+                if not ml:
+                    orgs = set()
+                    for mid, lbl in GROQ_DIRECT_MODELS:
+                        orgs.add(lbl.split("—")[-1].strip())
+                    console.print(f"[red]No Groq models matching org '{org_key}'.[/red]")
+                    console.print(f"[dim]Available orgs: {', '.join(sorted(orgs))}[/dim]")
+                    return
+                models_list, add_after_select = ml, aas
+                model_ids = [m[0] for m in models_list]
+            else:
+                # Try as a model ID with slash, e.g., /model/openai/gpt-4o-mini
+                possible_id = '/'.join(sub_parts)
+                all_model_ids = [m[0] for m in get_available_models(config)]
+                if possible_id in all_model_ids:
+                    config.model = possible_id
+                    config.save_persisted_config()
+                    console.print(f"[green]✓[/green] Model changed to [bold #ff8888]{possible_id}[/bold #ff8888]")
+                    console.print("[dim]The new model will be used for your next message.[/dim]")
+                    return
+                else:
+                    console.print(f"[red]Unknown model ID or invalid subcommand: {'/'.join(sub_parts)}[/red]")
+                    return
         elif len(sub_parts) >= 2 and sub_parts[0] == 'provider':
-            # /model/provider/<name> - select from provider
+            # /model/provider/<name> - legacy route, select from provider
             provider = '/'.join(sub_parts[1:])
-            # Check virtual providers first
             if provider == "openai" and config._openai_api_key:
                 models_list = list(OPENAI_DIRECT_MODELS)
                 model_ids = [m[0] for m in models_list]
@@ -653,16 +953,31 @@ class CommandHandler:
                 models_list = list(ANTHROPIC_DIRECT_MODELS)
                 model_ids = [m[0] for m in models_list]
             elif provider == "groq" and config._groq_api_key:
-                models_list = list(GROQ_DIRECT_MODELS)
+                result = _show_org_selector("groq", "Groq")
+                if result is None:
+                    return
+                models_list, add_after_select = result
+                model_ids = [m[0] for m in models_list]
+            elif provider == "together" and config._together_api_key:
+                result = _show_org_selector("together", "Together AI")
+                if result is None:
+                    return
+                models_list, add_after_select = result
+                model_ids = [m[0] for m in models_list]
+            elif provider == "openrouter" and (config._openrouter_api_key or config.access_token):
+                result = _show_org_selector("openrouter", "OpenRouter")
+                if result is None:
+                    return
+                models_list, add_after_select = result
                 model_ids = [m[0] for m in models_list]
             elif provider not in providers:
                 console.print(f"[red]Provider '{provider}' not found.[/red]")
                 return
             else:
                 prov_data = providers[provider]
-                models = prov_data["models"]
+                mods = prov_data["models"]
                 models_list = []
-                for m in models:
+                for m in mods:
                     cost = float(m.get('pricing', {}).get('completion', 0))
                     if cost > 0.000003 and not config.using_own_key:
                         models_list.append((m["id"], f"{m['name']} — {m.get('canonical_slug', m['id'])} [Upgrade to enterprise]"))
@@ -684,7 +999,7 @@ class CommandHandler:
                 console.print(f"[red]Unknown model ID or invalid subcommand: {'/'.join(sub_parts)}[/red]")
                 return
 
-        # Interactive arrow-key selector
+        # Interactive arrow-key model selector
         from prompt_toolkit import Application
         from prompt_toolkit.formatted_text import FormattedText
         from prompt_toolkit.key_binding import KeyBindings
@@ -696,10 +1011,12 @@ class CommandHandler:
         except ValueError:
             start_idx = 0
 
-        state = {"selected": start_idx}
+        state = {"selected": start_idx, "scroll": 0}
+        import shutil
+        term_h = shutil.get_terminal_size().lines
+        max_visible = max(term_h - 6, 10)
 
         def get_text():
-            # Build active-provider badge string
             active_providers = []
             if config._openai_api_key:
                 active_providers.append("OpenAI")
@@ -707,23 +1024,45 @@ class CommandHandler:
                 active_providers.append("Anthropic")
             if config._groq_api_key:
                 active_providers.append("Groq")
+            if config._together_api_key:
+                active_providers.append("Together")
             if config._openrouter_api_key or config.access_token:
                 active_providers.append("OpenRouter")
             provider_badge = f"  [{', '.join(active_providers)}]" if active_providers else ""
+
+            sel = state["selected"]
+            if sel < state["scroll"]:
+                state["scroll"] = sel
+            elif sel >= state["scroll"] + max_visible:
+                state["scroll"] = sel - max_visible + 1
+
+            scroll = state["scroll"]
+            visible = models_list[scroll:scroll + max_visible]
 
             parts = [
                 ("bold", "\n  Select model  "),
                 ("dim", f"(current: {config.model})"),
                 ("#ff8888", provider_badge),
-                ("", "\n\n"),
+                ("", "\n"),
             ]
-            for i, (mid, label) in enumerate(models_list):
-                if i == state["selected"]:
+            if scroll > 0:
+                parts.append(("dim", f"    ▲ {scroll} more above\n"))
+            else:
+                parts.append(("", "\n"))
+
+            for vi, (mid, label) in enumerate(visible):
+                actual_i = scroll + vi
+                if actual_i == sel:
                     parts.append(("#ff8888 bold reverse", f"  ❯ {label}  "))
                 else:
                     parts.append(("", f"    {label}  "))
                 parts.append(("", "\n"))
-            parts.append(("", "\n"))
+
+            remaining = len(models_list) - (scroll + max_visible)
+            if remaining > 0:
+                parts.append(("dim", f"    ▼ {remaining} more below\n"))
+            else:
+                parts.append(("", "\n"))
             parts.append(("dim italic", "  ↑ ↓ to move • Enter to confirm • Ctrl-C to cancel\n"))
             return FormattedText(parts)
 
@@ -741,6 +1080,14 @@ class CommandHandler:
         def _down(event):
             if state["selected"] < len(models_list) - 1:
                 state["selected"] += 1
+
+        @kb.add("pageup")
+        def _pgup(event):
+            state["selected"] = max(0, state["selected"] - max_visible)
+
+        @kb.add("pagedown")
+        def _pgdn(event):
+            state["selected"] = min(len(models_list) - 1, state["selected"] + max_visible)
 
         @kb.add("enter")
         def _select(event):
@@ -769,7 +1116,6 @@ class CommandHandler:
             return
         config.model = selected_id
         if add_after_select:
-            # Add the selected model to available_models if not already there
             new_tuple = models_list[state["selected"]]
             if new_tuple not in config.available_models:
                 config.available_models.append(new_tuple)
@@ -1279,76 +1625,351 @@ class CommandHandler:
         console.print(f"[green]✔ Successfully logged out.[/green] [dim]Account '{email}' session cleared.[/dim]")
 
     def handle_config(self):
-        """Interactive API key configuration — toggle between OpenRouter, OpenAI, and Anthropic keys."""
+        """Interactive configuration — API keys for coding mode, DB config for data mode."""
+        from prompt_toolkit import Application
+        from prompt_toolkit.formatted_text import FormattedText
+        from prompt_toolkit.key_binding import KeyBindings
+        from prompt_toolkit.layout import FormattedTextControl, HSplit, Layout, Window
+        
+        # Import config here to get current agent_mode
+        from config import config
+
+        # Always show API key configuration (pass data_mode flag to include DB options)
+        self._handle_coding_config(include_data_config=(config.agent_mode == "data"))
+
+    def _handle_coding_config(self, include_data_config=False):
+        """Handle API key configuration. When include_data_config=True, also shows DB options."""
         from prompt_toolkit import Application
         from prompt_toolkit.formatted_text import FormattedText
         from prompt_toolkit.key_binding import KeyBindings
         from prompt_toolkit.layout import FormattedTextControl, HSplit, Layout, Window
 
-        # Each entry: (config_attr, display_name, key_prefix_hint, description)
-        KEY_OPTIONS = [
-            (
-                "openrouter",
-                "OpenRouter",
-                "sk-or-",
-                "Access 200+ models across all providers",
-            ),
-            (
-                "openai",
-                "OpenAI",
-                "sk-",
-                "Direct access to GPT models",
-            ),
-            (
-                "anthropic",
-                "Anthropic",
-                "sk-ant-",
-                "Direct access to Claude models",
-            ),
-            (
-                "groq",
-                "Groq",
-                "gsk_",
-                "Ultra-fast inference for open-source models",
-            ),
+        from config import config
+
+        # Each entry: (kind, config_attr, display_name, hint, description)
+        # kind = "key" for API keys, "db" for database fields
+        ALL_OPTIONS = [
+            ("key", "openrouter", "OpenRouter",      "sk-or-",  "Access 200+ models across all providers"),
+            ("key", "openai",     "OpenAI",           "sk-",     "Direct access to GPT models"),
+            ("key", "anthropic",  "Anthropic",        "sk-ant-", "Direct access to Claude models"),
+            ("key", "groq",       "Groq",             "gsk_",    "Ultra-fast inference for open-source models"),
+            ("key", "together",   "Together AI",      "",        "Fast inference for open-source models (Llama, Qwen, DeepSeek)"),
         ]
 
-        def _current_key(provider: str) -> str:
-            if provider == "openrouter":
-                return config._openrouter_api_key or ""
-            elif provider == "openai":
-                return config._openai_api_key or ""
-            elif provider == "groq":
-                return config._groq_api_key or ""
-            else:
-                return config._anthropic_api_key or ""
+        if include_data_config:
+            ALL_OPTIONS.append(("separator", "", "", "", ""))  # visual separator
+            ALL_OPTIONS.extend([
+                ("db", "database_url", "Database URL",     "postgresql://user:pass@host:port/db", "Full SQLAlchemy connection string"),
+                ("db", "db_host",      "PostgreSQL Host",  "localhost",  "PostgreSQL server hostname"),
+                ("db", "db_port",      "PostgreSQL Port",  "5432",       "PostgreSQL server port"),
+                ("db", "db_name",      "Database Name",    "postgres",   "Database to connect to"),
+                ("db", "db_user",      "Database User",    "postgres",   "Username for authentication"),
+                ("db", "db_password",  "Database Password","********",   "Password for authentication"),
+            ])
 
-        def _key_status(provider: str) -> tuple:
-            """Return (style, status_text) for a provider key."""
-            key = _current_key(provider)
-            if key:
-                masked = f"{key[:8]}...{key[-4:]}" if len(key) > 12 else "****"
+        # Filter out separators for selection indexing
+        selectable = [(i, opt) for i, opt in enumerate(ALL_OPTIONS) if opt[0] != "separator"]
+
+        def _current_value(kind: str, field: str) -> str:
+            if kind == "key":
+                if field == "openrouter":    return config._openrouter_api_key or ""
+                elif field == "openai":      return config._openai_api_key or ""
+                elif field == "groq":        return config._groq_api_key or ""
+                elif field == "together":    return config._together_api_key or ""
+                else:                        return config._anthropic_api_key or ""
+            else:  # db
+                if field == "database_url":  return config.database_url or ""
+                elif field == "db_host":     return config.db_host or ""
+                elif field == "db_port":     return str(config.db_port or "5432")
+                elif field == "db_name":     return config.db_name or "postgres"
+                elif field == "db_user":     return config.db_user or ""
+                elif field == "db_password": return config.db_password or ""
+            return ""
+
+        def _status(kind: str, field: str) -> tuple:
+            value = _current_value(kind, field)
+            if not value:
+                return ("ansiyellow", "[NOT SET]")
+            if kind == "key":
+                masked = f"{value[:8]}...{value[-4:]}" if len(value) > 12 else "****"
                 return ("ansigreen", f"[SET: {masked}]")
-            return ("ansiyellow", "[NOT SET]")
+            # DB fields
+            if field == "db_password":
+                return ("ansigreen", "[SET: ********]")
+            if field == "database_url" and "://" in value:
+                parts = value.split("://")
+                protocol = parts[0]
+                rest = parts[1] if len(parts) > 1 else ""
+                if "@" in rest:
+                    user_pass, host_part = rest.split("@", 1)
+                    user = user_pass.split(":", 1)[0] if ":" in user_pass else user_pass
+                    masked = f"{protocol}://{user}:****@{host_part}"
+                else:
+                    masked = f"{protocol}://{rest[:20]}..."
+                return ("ansigreen", f"[SET: {masked}]")
+            return ("ansigreen", f"[SET: {value[:30]}]")
 
-        state = {"selected": 0}
-        result_provider = [None]
+        state = {"selected": 0}  # index into selectable list
+        result_choice = [None]   # will be (kind, field_id)
 
         def get_text():
             lines = [
-                ("bold", "\n  API Key Configuration\n"),
-                ("dim", "  Configure your API keys to access different model providers.\n\n"),
+                ("bold", "\n  Configuration\n"),
             ]
-            for i, (provider_id, name, hint, desc) in enumerate(KEY_OPTIONS):
-                status_style, status_text = _key_status(provider_id)
-                name_field = f"{name:<14}"
-                if i == state["selected"]:
+            if include_data_config:
+                lines.append(("dim", "  API keys & database connections for data analysis.\n\n"))
+            else:
+                lines.append(("dim", "  Configure your API keys to access different model providers.\n\n"))
+
+            sel_idx = 0
+            for opt in ALL_OPTIONS:
+                kind = opt[0]
+                if kind == "separator":
+                    lines.append(("dim", "  ─────────────────────────────────────────\n"))
+                    lines.append(("bold", "  Database Configuration\n\n"))
+                    continue
+                _, field_id, name, hint, desc = opt
+                status_style, status_text = _status(kind, field_id)
+                name_field = f"{name:<22}"
+                if sel_idx == state["selected"]:
                     lines.append(("#ff8888 bold reverse", f"  ❯ {name_field}"))
-                    lines.append((status_style, f"  {status_text:<30}"))
+                    lines.append((status_style, f"  {status_text:<45}"))
                     lines.append(("dim italic", f"  {desc}"))
                 else:
                     lines.append(("", f"    {name_field}"))
-                    lines.append((status_style, f"  {status_text:<30}"))
+                    lines.append((status_style, f"  {status_text:<45}"))
+                    lines.append(("dim", f"  {desc}"))
+                lines.append(("", "\n"))
+                sel_idx += 1
+            lines.append(("", "\n"))
+            lines.append(("dim italic", "  ↑ ↓ to navigate · Enter to configure · Esc to close\n"))
+            return FormattedText(lines)
+
+        kb = KeyBindings()
+
+        @kb.add("up")
+        @kb.add("k")
+        def _up(event):
+            if state["selected"] > 0:
+                state["selected"] -= 1
+
+        @kb.add("down")
+        @kb.add("j")
+        def _down(event):
+            if state["selected"] < len(selectable) - 1:
+                state["selected"] += 1
+
+        @kb.add("enter")
+        def _select(event):
+            _, opt = selectable[state["selected"]]
+            result_choice[0] = (opt[0], opt[1])  # (kind, field_id)
+            event.app.exit()
+
+        @kb.add("c-c")
+        @kb.add("escape")
+        def _cancel(event):
+            event.app.exit()
+
+        control = FormattedTextControl(get_text)
+        layout = Layout(HSplit([Window(content=control)]))
+        Application(layout=layout, key_bindings=kb, full_screen=False).run()
+
+        choice = result_choice[0]
+        if not choice:
+            console.print("[dim]Configuration unchanged.[/dim]\n")
+            return
+
+        kind, selected = choice
+
+        # Find display info
+        selected_info = next(o for o in ALL_OPTIONS if o[0] == kind and o[1] == selected)
+        _, _, display_name, prefix_hint, _ = selected_info
+        current = _current_value(kind, selected)
+
+        # ── Handle API key selection ──
+        if kind == "key":
+            console.print(f"\n[bold]Configure {display_name} API Key[/bold]")
+            if prefix_hint:
+                console.print(f"[dim]Expected format: {prefix_hint}...[/dim]")
+            if current:
+                console.print(f"[dim]Current key: {current[:8]}...{current[-4:]}[/dim]")
+                console.print("[dim]Press Enter with no input to clear the key.[/dim]")
+            else:
+                console.print("[dim]Press Enter with no input to cancel.[/dim]")
+
+            api_key = input("\n  Key > ").strip()
+
+            if not api_key:
+                if current:
+                    if selected == "openrouter":
+                        config._openrouter_api_key = None
+                        config.using_own_key = bool(config._openai_api_key or config._anthropic_api_key or config._groq_api_key)
+                    elif selected == "openai":
+                        config._openai_api_key = None
+                    elif selected == "groq":
+                        config._groq_api_key = None
+                    elif selected == "together":
+                        config._together_api_key = None
+                    else:
+                        config._anthropic_api_key = None
+                    config.save_persisted_config()
+                    console.print(f"[yellow]✓ {display_name} key cleared.[/yellow]\n")
+                else:
+                    console.print("[dim]No change made.[/dim]\n")
+                return
+
+            if prefix_hint and not api_key.startswith(prefix_hint.rstrip("-")):
+                console.print(
+                    f"[yellow]Note: {display_name} keys typically start with '{prefix_hint}'[/yellow]"
+                )
+
+            if selected == "openrouter":
+                config._openrouter_api_key = api_key
+                config.using_own_key = True
+            elif selected == "openai":
+                config._openai_api_key = api_key
+            elif selected == "groq":
+                config._groq_api_key = api_key
+                config.using_own_key = True
+            elif selected == "together":
+                config._together_api_key = api_key
+                config.using_own_key = True
+            else:
+                config._anthropic_api_key = api_key
+
+            config._agent_mode_changed = True
+            config.save_persisted_config()
+
+            console.print(f"\n[bold green]✓[/bold green] {display_name} API key saved.")
+            console.print("[dim]Use /model to browse and select a model for this provider.[/dim]\n")
+
+        # ── Handle DB field selection ──
+        else:
+            console.print(f"\n[bold]Configure {display_name}[/bold]")
+            console.print(f"[dim]Example: {prefix_hint}[/dim]")
+            if current:
+                if selected == "db_password":
+                    current_display = "********"
+                else:
+                    current_display = current[:50] + "..." if len(current) > 50 else current
+                console.print(f"[dim]Current: {current_display}[/dim]")
+                console.print("[dim]Press Enter with no input to clear/reset the value.[/dim]")
+            else:
+                console.print("[dim]Press Enter with no input to cancel.[/dim]")
+
+            db_value = input("\n  Value > ").strip()
+
+            if not db_value:
+                if current:
+                    if selected == "database_url":   config.database_url = ""
+                    elif selected == "db_host":      config.db_host = ""
+                    elif selected == "db_port":      config.db_port = 5432
+                    elif selected == "db_name":      config.db_name = "postgres"
+                    elif selected == "db_user":      config.db_user = ""
+                    elif selected == "db_password":  config.db_password = ""
+                    config.save_persisted_config()
+                    console.print(f"[yellow]✓ {display_name} reset to default.[/yellow]\n")
+                else:
+                    console.print("[dim]No change made.[/dim]\n")
+                return
+
+            if selected == "database_url":   config.database_url = db_value
+            elif selected == "db_host":      config.db_host = db_value
+            elif selected == "db_port":
+                try:
+                    config.db_port = int(db_value)
+                except ValueError:
+                    console.print("[red]Invalid port number. Using default 5432.[/red]")
+                    config.db_port = 5432
+            elif selected == "db_name":      config.db_name = db_value
+            elif selected == "db_user":      config.db_user = db_value
+            elif selected == "db_password":  config.db_password = db_value
+
+            config.save_persisted_config()
+
+            console.print(f"\n[bold green]✓[/bold green] {display_name} saved.")
+            console.print("[dim]Restart your session or reconnect to apply database changes.[/dim]\n")
+
+    def _handle_data_config(self):
+        """Handle database configuration for data mode."""
+        from config import config
+        
+        # Database config options for data agent
+        DB_OPTIONS = [
+            ("database_url", "Database URL", "postgresql://user:pass@host:port/db", "Full SQLAlchemy connection string"),
+            ("db_host", "PostgreSQL Host", "localhost", "PostgreSQL server hostname"),
+            ("db_port", "PostgreSQL Port", "5432", "PostgreSQL server port"),
+            ("db_name", "Database Name", "postgres", "Database to connect to"),
+            ("db_user", "Database User", "postgres", "Username for authentication"),
+            ("db_password", "Database Password", "********", "Password for authentication"),
+        ]
+
+        def _get_db_value(field: str) -> str:
+            if field == "database_url":
+                return config.database_url or ""
+            elif field == "db_host":
+                return config.db_host or ""
+            elif field == "db_port":
+                return str(config.db_port or "5432")
+            elif field == "db_name":
+                return config.db_name or "postgres"
+            elif field == "db_user":
+                return config.db_user or ""
+            elif field == "db_password":
+                return config.db_password or ""
+            return ""
+
+        def _db_status(field: str) -> tuple:
+            """Return (style, status_text) for a DB config field."""
+            value = _get_db_value(field)
+            if value:
+                if field == "db_password" and value:
+                    masked = "********"
+                    return ("ansigreen", f"[SET: {masked}]")
+                elif field == "database_url":
+                    # Show a masked version
+                    if "://" in value:
+                        parts = value.split("://")
+                        protocol = parts[0]
+                        rest = parts[1] if len(parts) > 1 else ""
+                        if "@" in rest:
+                            user_pass, host_part = rest.split("@", 1)
+                            if ":" in user_pass:
+                                user, _ = user_pass.split(":", 1)
+                                masked = f"{protocol}://{user}:****@{host_part}"
+                            else:
+                                masked = f"{protocol}://{user_pass}@{host_part}"
+                        else:
+                            masked = f"{protocol}://{rest[:20]}..."
+                        return ("ansigreen", f"[SET: {masked}]")
+                    return ("ansigreen", f"[SET: {value[:20]}...]")
+                return ("ansigreen", f"[SET: {value[:30]}]")
+            return ("ansiyellow", "[NOT SET]")
+
+        from prompt_toolkit import Application
+        from prompt_toolkit.formatted_text import FormattedText
+        from prompt_toolkit.key_binding import KeyBindings
+        from prompt_toolkit.layout import FormattedTextControl, HSplit, Layout, Window
+
+        state = {"selected": 0}
+        result_field = [None]
+
+        def get_text():
+            lines = [
+                ("bold", "\n  Data Agent Configuration\n"),
+                ("dim", "  Configure database connections for data analysis tools.\n"),
+                ("dim", "  Use /mode coding to switch back to API key configuration.\n\n"),
+            ]
+            for i, (field_id, name, hint, desc) in enumerate(DB_OPTIONS):
+                status_style, status_text = _db_status(field_id)
+                name_field = f"{name:<22}"
+                if i == state["selected"]:
+                    lines.append(("#ff8888 bold reverse", f"  ❯ {name_field}"))
+                    lines.append((status_style, f"  {status_text:<45}"))
+                    lines.append(("dim italic", f"  {desc}"))
+                else:
+                    lines.append(("", f"    {name_field}"))
+                    lines.append((status_style, f"  {status_text:<45}"))
                     lines.append(("dim", f"  {desc}"))
                 lines.append(("", "\n"))
             lines.append(("", "\n"))
@@ -1366,12 +1987,12 @@ class CommandHandler:
         @kb.add("down")
         @kb.add("j")
         def _down(event):
-            if state["selected"] < len(KEY_OPTIONS) - 1:
+            if state["selected"] < len(DB_OPTIONS) - 1:
                 state["selected"] += 1
 
         @kb.add("enter")
         def _select(event):
-            result_provider[0] = KEY_OPTIONS[state["selected"]][0]
+            result_field[0] = DB_OPTIONS[state["selected"]][0]
             event.app.exit()
 
         @kb.add("c-c")
@@ -1383,66 +2004,73 @@ class CommandHandler:
         layout = Layout(HSplit([Window(content=control)]))
         Application(layout=layout, key_bindings=kb, full_screen=False).run()
 
-        selected = result_provider[0]
+        selected = result_field[0]
         if not selected:
             console.print("[dim]Configuration unchanged.[/dim]\n")
             return
 
-        # Find display info for selected provider
-        selected_info = next(o for o in KEY_OPTIONS if o[0] == selected)
-        _, display_name, prefix_hint, _ = selected_info
+        # Find display info for selected field
+        selected_info = next(o for o in DB_OPTIONS if o[0] == selected)
+        _, display_name, hint, _ = selected_info
 
-        console.print(f"\n[bold]Configure {display_name} API Key[/bold]")
-        console.print(f"[dim]Expected format: {prefix_hint}...[/dim]")
-        current = _current_key(selected)
+        console.print(f"\n[bold]Configure {display_name}[/bold]")
+        console.print(f"[dim]Example: {hint}[/dim]")
+        current = _get_db_value(selected)
         if current:
-            console.print(f"[dim]Current key: {current[:8]}...{current[-4:]}[/dim]")
-            console.print("[dim]Press Enter with no input to clear the key.[/dim]")
+            if selected == "db_password":
+                current_display = "********"
+            else:
+                current_display = current[:50] + "..." if len(current) > 50 else current
+            console.print(f"[dim]Current: {current_display}[/dim]")
+            console.print("[dim]Press Enter with no input to clear/reset the value.[/dim]")
         else:
             console.print("[dim]Press Enter with no input to cancel.[/dim]")
 
-        api_key = input("\n  Key > ").strip()
+        db_value = input("\n  Value > ").strip()
 
-        if not api_key:
+        if not db_value:
             if current:
-                # Clear the key
-                if selected == "openrouter":
-                    config._openrouter_api_key = None
-                    config.using_own_key = bool(config._openai_api_key or config._anthropic_api_key or config._groq_api_key)
-                elif selected == "openai":
-                    config._openai_api_key = None
-                elif selected == "groq":
-                    config._groq_api_key = None
-                else:
-                    config._anthropic_api_key = None
+                # Reset to default or clear
+                if selected == "database_url":
+                    config.database_url = ""
+                elif selected == "db_host":
+                    config.db_host = ""
+                elif selected == "db_port":
+                    config.db_port = 5432
+                elif selected == "db_name":
+                    config.db_name = "postgres"
+                elif selected == "db_user":
+                    config.db_user = ""
+                elif selected == "db_password":
+                    config.db_password = ""
                 config.save_persisted_config()
-                console.print(f"[yellow]✓ {display_name} key cleared.[/yellow]\n")
+                console.print(f"[yellow]✓ {display_name} reset to default.[/yellow]\n")
             else:
                 console.print("[dim]No change made.[/dim]\n")
             return
 
-        # Soft-warn if prefix looks wrong (don't block — user may know better)
-        if not api_key.startswith(prefix_hint.rstrip("-")):
-            console.print(
-                f"[yellow]Note: {display_name} keys typically start with '{prefix_hint}'[/yellow]"
-            )
-
-        # Persist
-        if selected == "openrouter":
-            config._openrouter_api_key = api_key
-            config.using_own_key = True
-        elif selected == "openai":
-            config._openai_api_key = api_key
-        elif selected == "groq":
-            config._groq_api_key = api_key
-            config.using_own_key = True
-        else:
-            config._anthropic_api_key = api_key
+        # Persist the value
+        if selected == "database_url":
+            config.database_url = db_value
+        elif selected == "db_host":
+            config.db_host = db_value
+        elif selected == "db_port":
+            try:
+                config.db_port = int(db_value)
+            except ValueError:
+                console.print("[red]Invalid port number. Using default 5432.[/red]")
+                config.db_port = 5432
+        elif selected == "db_name":
+            config.db_name = db_value
+        elif selected == "db_user":
+            config.db_user = db_value
+        elif selected == "db_password":
+            config.db_password = db_value
 
         config.save_persisted_config()
 
-        console.print(f"\n[bold green]✓[/bold green] {display_name} API key saved.")
-        console.print("[dim]Use /model to browse and select a model for this provider.[/dim]\n")
+        console.print(f"\n[bold green]✓[/bold green] {display_name} saved.")
+        console.print("[dim]Restart your session or reconnect to apply database changes.[/dim]\n")
 
     def handle_mcp(self, user_input: str):
         """Handle /mcp subcommands."""

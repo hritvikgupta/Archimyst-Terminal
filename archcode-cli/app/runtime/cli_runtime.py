@@ -237,6 +237,7 @@ class ArchCodeCliRuntime:
         self.cmd_handler = None
         self.session = None
         self.agent = None
+        self.run_event_cls = None  # Set by _build_agent; differs per agent framework
         self.session_id = "N/A"
 
     def _load_runtime_imports(self) -> RuntimeImports:
@@ -251,7 +252,7 @@ class ArchCodeCliRuntime:
             import requests  # noqa: F401  # warm import only
             from packaging import version as v_parser  # noqa: F401  # warm import only
 
-            from app.agents.agent_graph import RunEvent, create_langgraph_agent as create_agent
+            from app.agents.agent_graph import RunEvent, create_langgraph_agent
             from background_task_manager import get_task_manager
             from commands import CommandHandler
             from diff_manager import get_diff_manager
@@ -260,7 +261,7 @@ class ArchCodeCliRuntime:
 
         self.runtime = RuntimeImports(
             RunEvent=RunEvent,
-            create_agent=create_agent,
+            create_agent=create_langgraph_agent,
             CommandHandler=CommandHandler,
             get_diff_manager=get_diff_manager,
             set_task_context=set_task_context,
@@ -328,24 +329,111 @@ class ArchCodeCliRuntime:
         except Exception as e:
             self.console.print(f"[dim]○ RAG sync skipped: {e}[/dim]\n")
 
+    # ------------------------------------------------------------------
+    # Axon index helpers — fingerprint-based skip & incremental update
+    # ------------------------------------------------------------------
+    _AXON_IGNORE_DIRS = {
+        '.git', 'node_modules', 'venv', '.venv', '__pycache__', '.next',
+        'dist', 'build', '.archcode', '.axon', '.tox', '.mypy_cache',
+        '.pytest_cache', 'env', '.env',
+    }
+    _AXON_EXTENSIONS = {
+        '.py', '.ts', '.tsx', '.js', '.jsx', '.java', '.go', '.rs',
+        '.cpp', '.c', '.h', '.cs', '.php', '.rb', '.swift', '.kt',
+        '.scala', '.sh', '.bash', '.zsh',
+    }
+
+    @staticmethod
+    def _axon_source_fingerprint(root: str) -> str:
+        """Return a fast SHA-256 fingerprint of all source files under *root*.
+
+        Uses file path + mtime + size (no content reads) so it's O(readdir),
+        not O(file-bytes).  Any added / deleted / modified source file will
+        change the fingerprint.
+        """
+        import hashlib
+        h = hashlib.sha256()
+        entries = []
+        for dirpath, dirnames, filenames in os.walk(root):
+            # prune ignored directories in-place
+            dirnames[:] = [
+                d for d in dirnames
+                if d not in ArchCodeCliRuntime._AXON_IGNORE_DIRS
+            ]
+            for fname in filenames:
+                ext = os.path.splitext(fname)[1].lower()
+                if ext not in ArchCodeCliRuntime._AXON_EXTENSIONS:
+                    continue
+                full = os.path.join(dirpath, fname)
+                try:
+                    st = os.stat(full)
+                    entries.append(f"{full}\x00{st.st_mtime_ns}\x00{st.st_size}")
+                except OSError:
+                    pass
+        entries.sort()
+        for e in entries:
+            h.update(e.encode())
+        return h.hexdigest()
+
     def _bootstrap_axon(self):
-        """Index codebase with Axon on startup (foreground with spinner)."""
+        """Index codebase with Axon on startup.
+
+        * First run  → full ``axon analyze .``
+        * Later runs → skip entirely if no source files changed since the
+          last successful index (checked via a lightweight mtime+size
+          fingerprint stored in ``.axon/fingerprint``).
+        """
         import subprocess
         from rich.status import Status
+
         cwd = os.getcwd()
         axon_dir = os.path.join(cwd, ".axon")
+        fp_file = os.path.join(axon_dir, "fingerprint")
+
         try:
-            check = subprocess.run("axon --version", shell=True, capture_output=True, text=True, timeout=5)
+            check = subprocess.run(
+                "axon --version", shell=True,
+                capture_output=True, text=True, timeout=5,
+            )
             if check.returncode != 0:
                 self.console.print("[dim]Axon not found, skipping graph index.[/dim]")
                 return
-            label = "Updating" if os.path.isdir(axon_dir) else "Building"
+
+            # --- Fingerprint check: skip if nothing changed ---------------
+            if os.path.isdir(axon_dir):
+                current_fp = self._axon_source_fingerprint(cwd)
+                try:
+                    with open(fp_file, "r") as f:
+                        stored_fp = f.read().strip()
+                except (FileNotFoundError, OSError):
+                    stored_fp = None
+
+                if stored_fp == current_fp:
+                    self.console.print("[green]✓ Code graph ready (unchanged).[/green]")
+                    return
+
+                # Files changed → re-index
+                label = "Updating"
+            else:
+                current_fp = self._axon_source_fingerprint(cwd)
+                label = "Building"
+
             with Status(f"[bold cyan]{label} code graph index...", console=self.console):
-                result = subprocess.run("axon analyze .", shell=True, capture_output=True, text=True, timeout=300)
+                result = subprocess.run(
+                    "axon analyze .", shell=True,
+                    capture_output=True, text=True, timeout=300,
+                )
+
             if result.returncode == 0:
+                # Persist fingerprint so next startup can skip
+                os.makedirs(axon_dir, exist_ok=True)
+                with open(fp_file, "w") as f:
+                    f.write(current_fp)
                 self.console.print("[green]✓ Code graph ready.[/green]")
             else:
-                self.console.print(f"[yellow]Axon indexing warning: {result.stderr[:200]}[/yellow]")
+                self.console.print(
+                    f"[yellow]Axon indexing warning: {result.stderr[:200]}[/yellow]"
+                )
         except Exception as e:
             self.console.print(f"[dim]Axon init skipped: {e}[/dim]")
 
@@ -571,11 +659,22 @@ class ArchCodeCliRuntime:
         except Exception:
             pass
 
-        self.agent = runtime.create_agent(
-            session_id=_agent_session_id,
-            extra_tools=_extra_tools if _extra_tools else None,
-            skills=_agno_skills,
-        )
+        # Check agent mode and create appropriate agent
+        if config.agent_mode == "data":
+            from app.agents.data.agent import create_data_agent
+            from agno.agent import RunEvent as AgnoRunEvent
+            self.agent = create_data_agent(
+                session_id=_agent_session_id,
+                extra_tools=_extra_tools if _extra_tools else None,
+            )
+            self.run_event_cls = AgnoRunEvent
+        else:
+            self.agent = runtime.create_agent(
+                session_id=_agent_session_id,
+                extra_tools=_extra_tools if _extra_tools else None,
+                skills=_agno_skills,
+            )
+            self.run_event_cls = runtime.RunEvent
         return self.agent
 
     @staticmethod
@@ -623,6 +722,65 @@ class ArchCodeCliRuntime:
             fp = tool_args.get("file_path", "")
             name = os.path.basename(fp) if fp else ""
             return f"Writing {name}" if name else "Implementing new file"
+        # --- Data agent tools ---
+        if tool_name == "search_files":
+            pat = tool_args.get("pattern", "")
+            return f"Searching files: {pat}" if pat else "Searching files"
+        if tool_name == "save_file":
+            fn = tool_args.get("file_name", "")
+            return f"Saving {fn}" if fn else "Saving file"
+        if tool_name == "read_file_chunk":
+            fn = tool_args.get("file_name", "")
+            return f"Reading {fn}" if fn else "Reading file chunk"
+        if tool_name == "list_files":
+            return "Listing files"
+        if tool_name == "run_query":
+            q = tool_args.get("query", "")
+            return f"DuckDB: {q[:60]}" if q else "Running DuckDB query"
+        if tool_name == "show_tables":
+            return "Listing DuckDB tables"
+        if tool_name in ("describe_table", "summarize_table"):
+            tbl = tool_args.get("table", "") or tool_args.get("table_name", "")
+            label = "Describing" if tool_name == "describe_table" else "Summarizing"
+            return f"{label} table: {tbl}" if tbl else f"{label} table"
+        if tool_name == "inspect_query":
+            q = tool_args.get("query", "")
+            return f"Inspecting query: {q[:50]}" if q else "Inspecting query plan"
+        if tool_name in ("create_table_from_path", "load_local_path_to_table", "load_local_csv_to_table"):
+            p = tool_args.get("path", "")
+            name = os.path.basename(p) if p else ""
+            return f"Loading {name} into DuckDB" if name else "Loading file into DuckDB"
+        if tool_name == "export_table_to_path":
+            tbl = tool_args.get("table", "")
+            fmt = tool_args.get("format", "")
+            return f"Exporting {tbl} as {fmt}" if tbl else "Exporting table"
+        if tool_name == "run_sql_query":
+            q = tool_args.get("query", "")
+            return f"SQL: {q[:60]}" if q else "Running SQL query"
+        if tool_name == "list_tables":
+            return "Listing SQL tables"
+        if tool_name == "run_python_code":
+            code = tool_args.get("code", "")
+            first_line = code.split("\n")[0][:50] if code else ""
+            return f"Python: {first_line}" if first_line else "Running Python code"
+        if tool_name == "run_python_file_return_variable":
+            fn = tool_args.get("file_name", "")
+            return f"Running {fn}" if fn else "Running Python file"
+        if tool_name == "run_shell_command":
+            args_list = tool_args.get("args", [])
+            cmd = " ".join(args_list)[:60] if isinstance(args_list, list) else str(args_list)[:60]
+            return f"Shell: {cmd}" if cmd else "Running shell command"
+        if tool_name == "read_csv_file":
+            fn = tool_args.get("csv_name", "")
+            return f"Reading CSV: {fn}" if fn else "Reading CSV file"
+        if tool_name == "query_csv_file":
+            fn = tool_args.get("csv_name", "")
+            q = tool_args.get("sql_query", "")
+            return f"Querying {fn}: {q[:40]}" if fn else "Querying CSV file"
+        if tool_name in ("generate_json_file", "generate_csv_file", "generate_pdf_file", "generate_text_file"):
+            fn = tool_args.get("filename", "")
+            ext = tool_name.replace("generate_", "").replace("_file", "").upper()
+            return f"Generating {ext}: {fn}" if fn else f"Generating {ext} file"
         return tool_descriptions.get(tool_name, tool_name)
 
     def _prompt_user(self, session: PromptSession) -> str:
@@ -850,11 +1008,12 @@ class ArchCodeCliRuntime:
 
                 # Handle slash commands (pass empty list — Agno manages history internally)
                 if cmd_handler.handle_command(user_input, []):
-                    # If the model or API key was changed via slash commands, recreate agent
+                    # If the model, API key, or agent mode was changed via slash commands, recreate agent
                     current_agent_model_id = getattr(self.agent.model, "id", None) if self.agent else None
                     current_agent_api_key = getattr(self.agent.model, "api_key", None) if self.agent else None
+                    agent_mode_changed = getattr(config, "_agent_mode_changed", False)
 
-                    if self.agent and (current_agent_model_id != config.model or current_agent_api_key != config.openrouter_api_key):
+                    if self.agent and (agent_mode_changed or current_agent_model_id != config.model or current_agent_api_key != config.openrouter_api_key):
                         try:
                             old_session_id = getattr(self.agent, "session_id", None)
                             _extra = []
@@ -868,12 +1027,24 @@ class ArchCodeCliRuntime:
                                 _extra.extend(_mcp_mgr.get_tools())
                             except Exception:
                                 pass
-                            self.agent = runtime.create_agent(
-                                session_id=old_session_id,
-                                extra_tools=_extra if _extra else None,
-                                skills=None,
-                            )
+                            # Create the right agent based on current mode
+                            if config.agent_mode == "data":
+                                from app.agents.data.agent import create_data_agent
+                                from agno.agent import RunEvent as AgnoRunEvent
+                                self.agent = create_data_agent(
+                                    session_id=old_session_id,
+                                    extra_tools=_extra if _extra else None,
+                                )
+                                self.run_event_cls = AgnoRunEvent
+                            else:
+                                self.agent = runtime.create_agent(
+                                    session_id=old_session_id,
+                                    extra_tools=_extra if _extra else None,
+                                    skills=None,
+                                )
+                                self.run_event_cls = runtime.RunEvent
                             agent = self.agent  # keep local alias in sync
+                            config._agent_mode_changed = False  # reset the flag
                         except Exception as _e:
                             self.console.print(f"[dim]Agent recreation failed: {_e}[/dim]")
                     continue
@@ -883,6 +1054,7 @@ class ArchCodeCliRuntime:
                     or getattr(config, "groq_api_key", None)
                     or getattr(config, "openai_api_key", None)
                     or getattr(config, "anthropic_api_key", None)
+                    or getattr(config, "together_api_key", None)
                     or getattr(config, "access_token", None)
                 )
                 if not has_any_key:
@@ -948,6 +1120,30 @@ class ArchCodeCliRuntime:
                     "search_codebase_graph": "Searching code graph",
                     "axon_context": "Analyzing symbol context",
                     "axon_impact": "Analyzing blast radius",
+                    # Data agent tools
+                    "search_files": "Searching files",
+                    "save_file": "Saving file",
+                    "read_file_chunk": "Reading file chunk",
+                    "run_query": "Running DuckDB query",
+                    "show_tables": "Listing tables",
+                    "describe_table": "Describing table",
+                    "inspect_query": "Inspecting query",
+                    "summarize_table": "Summarizing table",
+                    "create_table_from_path": "Loading file into table",
+                    "export_table_to_path": "Exporting table",
+                    "load_local_path_to_table": "Loading file into table",
+                    "load_local_csv_to_table": "Loading CSV into table",
+                    "run_sql_query": "Running SQL query",
+                    "list_tables": "Listing tables",
+                    "run_python_code": "Running Python code",
+                    "run_python_file_return_variable": "Running Python file",
+                    "run_shell_command": "Running shell command",
+                    "read_csv_file": "Reading CSV file",
+                    "query_csv_file": "Querying CSV file",
+                    "generate_json_file": "Generating JSON file",
+                    "generate_csv_file": "Generating CSV file",
+                    "generate_pdf_file": "Generating PDF file",
+                    "generate_text_file": "Generating text file",
                 }
 
                 # Loop: run agent, handle PLAN_PENDING until user accepts/rejects or we finish
@@ -1040,7 +1236,7 @@ class ArchCodeCliRuntime:
 
                             if approval_gate.is_rejected():
                                 break
-                            if chunk.event == runtime.RunEvent.tool_call_started:
+                            if chunk.event == self.run_event_cls.tool_call_started:
                                 tool_name = (
                                     chunk.tool.tool_name
                                     if hasattr(chunk, "tool") and chunk.tool
@@ -1128,14 +1324,44 @@ class ArchCodeCliRuntime:
                                         "search_skills",
                                         "view_context",
                                         "read_file_chunked",
+                                        "search_files",
+                                        "list_files",
+                                        "read_file_chunk",
+                                        "show_tables",
+                                        "describe_table",
+                                        "list_tables",
+                                        "summarize_table",
+                                        "inspect_query",
+                                        "read_csv_file",
                                     ]:
                                         phase = "Explore"
                                     elif tool_name in [
                                         "write_to_file_tool",
                                         "edit_file",
                                         "whole_file_update",
+                                        "save_file",
+                                        "generate_json_file",
+                                        "generate_csv_file",
+                                        "generate_pdf_file",
+                                        "generate_text_file",
+                                        "export_table_to_path",
                                     ]:
                                         phase = "Implement"
+                                    elif tool_name in [
+                                        "run_query",
+                                        "run_sql_query",
+                                        "query_csv_file",
+                                        "create_table_from_path",
+                                        "load_local_path_to_table",
+                                        "load_local_csv_to_table",
+                                    ]:
+                                        phase = "Data Query"
+                                    elif tool_name in [
+                                        "run_python_code",
+                                        "run_python_file_return_variable",
+                                        "run_shell_command",
+                                    ]:
+                                        phase = "Execute"
                                     elif tool_name == "run_terminal_command":
                                         phase = "Verify"
                                     elif tool_name and tool_name.startswith("mcp__"):
@@ -1171,7 +1397,7 @@ class ArchCodeCliRuntime:
                                     if _affected:
                                         self.console.print(_active_tracker.render())
 
-                            elif chunk.event == runtime.RunEvent.tool_call_completed:
+                            elif chunk.event == self.run_event_cls.tool_call_completed:
                                 supervisor_call_count += 1
 
                                 # Update plan tracker on tool completion
@@ -1193,7 +1419,7 @@ class ArchCodeCliRuntime:
 
                             elif (
                                 chunk.event
-                                == runtime.RunEvent.model_request_completed
+                                == self.run_event_cls.model_request_completed
                             ):
                                 # Live token tracking — ModelRequestCompletedEvent
                                 # has input_tokens/output_tokens/total_tokens as direct attrs
@@ -1217,11 +1443,11 @@ class ArchCodeCliRuntime:
                                         f"[bold #ff8888]●[/bold #ff8888] Running tools... ({shown_toks/1000:.1f}k tokens)"
                                     )
 
-                            elif chunk.event == runtime.RunEvent.run_content:
+                            elif chunk.event == self.run_event_cls.run_content:
                                 if hasattr(chunk, "content") and chunk.content:
                                     content_buffer += chunk.content
 
-                            elif chunk.event == runtime.RunEvent.run_completed:
+                            elif chunk.event == self.run_event_cls.run_completed:
                                 # Extract final metrics from completed run
                                 if hasattr(chunk, "metrics") and chunk.metrics:
                                     run_metrics = chunk.metrics

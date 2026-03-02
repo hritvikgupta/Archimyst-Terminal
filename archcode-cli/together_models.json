@@ -1,0 +1,2026 @@
+[
+  {
+    "id": "cartesia/sonic",
+    "display_name": "Cartesia Sonic",
+    "type": "audio",
+    "organization": "Together",
+    "context_length": 0,
+    "license": null
+  },
+  {
+    "id": "google/imagen-4.0-preview",
+    "display_name": "Google Imagen 4.0 Preview",
+    "type": "image",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "cartesia/sonic-2",
+    "display_name": "Cartesia Sonic 2",
+    "type": "audio",
+    "organization": "Together",
+    "context_length": 0,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen-Image",
+    "display_name": "Qwen Image",
+    "type": "image",
+    "organization": "Qwen",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "stabilityai/stable-diffusion-xl-base-1.0",
+    "display_name": "SD XL",
+    "type": "image",
+    "organization": "stabilityai",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "ByteDance-Seed/Seedream-4.0",
+    "display_name": "ByteDance Seedream 4.0",
+    "type": "image",
+    "organization": "ByteDance",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "black-forest-labs/FLUX.2-flex",
+    "display_name": "FLUX.2 [flex]",
+    "type": "image",
+    "organization": "Black Forest Labs",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/imagen-4.0-ultra",
+    "display_name": "Google Imagen 4.0 Ultra",
+    "type": "image",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    "display_name": "Meta Llama 3.3 70B Instruct Turbo",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 131072,
+    "license": "Llama-3.3 (Other)"
+  },
+  {
+    "id": "Qwen/Qwen3.5-397B-A17B",
+    "display_name": "Qwen3.5 397B A17b",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "openai/whisper-large-v3",
+    "display_name": "Whisper large-v3",
+    "type": "transcribe",
+    "organization": "OpenAI",
+    "context_length": null,
+    "license": "apache2"
+  },
+  {
+    "id": "kwaivgI/kling-1.6-standard",
+    "display_name": "Kling 1.6 Standard",
+    "type": "video",
+    "organization": "kwaivgI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "zai-org/GLM-4.5-Air-FP8",
+    "display_name": "Glm 4.5 Air Fp8",
+    "type": "chat",
+    "organization": "Zai Org",
+    "context_length": 131072,
+    "license": "mit"
+  },
+  {
+    "id": "Qwen/Qwen3.5-397B-A17B-FP8",
+    "display_name": "Qwen3.5 397B A17b Fp8",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": null
+  },
+  {
+    "id": "deepcogito/cogito-v2-1-671b",
+    "display_name": "Cogito v2.1 671B",
+    "type": "chat",
+    "organization": "Deepcogito",
+    "context_length": 163840,
+    "license": null
+  },
+  {
+    "id": "LiquidAI/LFM2-24B-A2B-Preview",
+    "display_name": "LFM2 24B A2B Preview",
+    "type": "chat",
+    "organization": "LiquidAI",
+    "context_length": 128000,
+    "license": null
+  },
+  {
+    "id": "zai-org/GLM-4.7",
+    "display_name": "GLM 4.7 Fp8",
+    "type": "chat",
+    "organization": "Zai Org",
+    "context_length": 202752,
+    "license": "mit"
+  },
+  {
+    "id": "Qwen/Qwen3-VL-32B-Instruct",
+    "display_name": "Qwen3-VL-32B-Instruct",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "arcee-ai/trinity-mini",
+    "display_name": "Trinity Mini",
+    "type": "chat",
+    "organization": "Arcee AI",
+    "context_length": 128000,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-Next-80B-A3B-Thinking",
+    "display_name": "Qwen3 Next 80B A3b Thinking",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "LiquidAI/LFM2-24B-A2B",
+    "display_name": "LFM2-24B-A2B",
+    "type": "chat",
+    "organization": "Togethercomputer",
+    "context_length": 32768,
+    "license": null
+  },
+  {
+    "id": "canopylabs/orpheus-3b-0.1-ft",
+    "display_name": "Orpheus 3B 0.1 FT",
+    "type": "audio",
+    "organization": "Canopy Labs",
+    "context_length": null,
+    "license": "apache2"
+  },
+  {
+    "id": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+    "display_name": "Qwen3 Next 80B A3b Instruct",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "moonshotai/Kimi-K2-Thinking",
+    "display_name": "Kimi K2 Thinking",
+    "type": "chat",
+    "organization": "Moonshotai",
+    "context_length": 262144,
+    "license": null
+  },
+  {
+    "id": "togethercomputer/MoA-1-Turbo",
+    "display_name": "Together AI MoA-1-Turbo",
+    "type": "chat",
+    "organization": "Together AI",
+    "context_length": 32768,
+    "license": null
+  },
+  {
+    "id": "stabilityai/stable-diffusion-3-medium",
+    "display_name": "Stable Diffusion 3",
+    "type": "image",
+    "organization": "stabilityai",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "ideogram/ideogram-3.0",
+    "display_name": "Ideogram 3.0",
+    "type": "image",
+    "organization": "ideogram",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Rundiffusion/Juggernaut-Lightning-Flux",
+    "display_name": "Juggernaut Lightning Flux by RunDiffusion",
+    "type": "image",
+    "organization": "RunDiffusion",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "HiDream-ai/HiDream-I1-Full",
+    "display_name": "HiDream-I1-Full",
+    "type": "image",
+    "organization": "HiDream-ai",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/veo-3.0",
+    "display_name": "Google Veo 3.0",
+    "type": "video",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "minimax/hailuo-02",
+    "display_name": "MiniMax Hailuo 02",
+    "type": "video",
+    "organization": "minimax",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "ServiceNow-AI/Apriel-1.6-15b-Thinker",
+    "display_name": "Apriel 1.6 15B Thinker",
+    "type": "chat",
+    "organization": "Servicenow AI",
+    "context_length": 131072,
+    "license": "mit"
+  },
+  {
+    "id": "minimax/video-01-director",
+    "display_name": "MiniMax 01 Director",
+    "type": "video",
+    "organization": "minimax",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nvidia/NVIDIA-Nemotron-Nano-9B-v2",
+    "display_name": "Nvidia Nemotron Nano 9B V2",
+    "type": "chat",
+    "organization": "Nvidia",
+    "context_length": 131072,
+    "license": "other nvidia-open-model-license"
+  },
+  {
+    "id": "zai-org/GLM-5",
+    "display_name": "GLM-5-FP4",
+    "type": "chat",
+    "organization": "zai-org",
+    "context_length": 202752,
+    "license": null
+  },
+  {
+    "id": "MiniMaxAI/MiniMax-M2.5",
+    "display_name": "MiniMax M2.5 FP4",
+    "type": "chat",
+    "organization": "MiniMaxAI",
+    "context_length": 196608,
+    "license": null
+  },
+  {
+    "id": "black-forest-labs/FLUX.1-pro",
+    "display_name": "FLUX.1 [pro]",
+    "type": "image",
+    "organization": "Black Forest Labs",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/flash-image-2.5",
+    "display_name": "Gemini Flash Image 2.5 (Nano Banana)",
+    "type": "image",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+    "display_name": "Llama 4 Maverick Instruct (17Bx128E)",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 1048576,
+    "license": "llama4"
+  },
+  {
+    "id": "ServiceNow-AI/Apriel-1.5-15b-Thinker",
+    "display_name": "Apriel 1.5 15B Thinker",
+    "type": "chat",
+    "organization": "Servicenow AI",
+    "context_length": 131072,
+    "license": "mit"
+  },
+  {
+    "id": "Qwen/Qwen3-Coder-Next-FP8",
+    "display_name": "Qwen3 Coder Next Fp8",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "meta-llama/Llama-Guard-4-12B",
+    "display_name": "Llama Guard 4 12B",
+    "type": "moderation",
+    "organization": "Meta",
+    "context_length": 1048576,
+    "license": "other llama4"
+  },
+  {
+    "id": "HiDream-ai/HiDream-I1-Fast",
+    "display_name": "HiDream-I1-Fast",
+    "type": "image",
+    "organization": "HiDream-ai",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Wan-AI/Wan2.2-T2V-A14B",
+    "display_name": "Wan 2.2 T2V",
+    "type": "video",
+    "organization": "Wan-AI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "ByteDance/Seedance-1.0-pro",
+    "display_name": "ByteDance Seedance 1.0 Pro",
+    "type": "video",
+    "organization": "ByteDance",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/veo-3.0-fast-audio",
+    "display_name": "Google Veo 3.0 Fast + Audio",
+    "type": "video",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+    "display_name": "Meta Llama 3.1 8B Instruct Turbo",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 131072,
+    "license": "Llama-3.1 (Other)"
+  },
+  {
+    "id": "black-forest-labs/FLUX.1-kontext-max",
+    "display_name": "FLUX.1 Kontext [max]",
+    "type": "image",
+    "organization": "Black Forest Labs",
+    "context_length": 0,
+    "license": null
+  },
+  {
+    "id": "ByteDance-Seed/Seedream-3.0",
+    "display_name": "ByteDance Seedream 3.0",
+    "type": "image",
+    "organization": "ByteDance",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "RunDiffusion/Juggernaut-pro-flux",
+    "display_name": "Juggernaut Pro Flux by RunDiffusion 1.0.0",
+    "type": "image",
+    "organization": "RunDiffusion",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "HiDream-ai/HiDream-I1-Dev",
+    "display_name": "HiDream-I1-Dev",
+    "type": "image",
+    "organization": "HiDream-ai",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Lykon/DreamShaper",
+    "display_name": "Dreamshaper",
+    "type": "image",
+    "organization": "Lykon",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "cartesia/sonic-3",
+    "display_name": "Cartesia Sonic 3",
+    "type": "audio",
+    "organization": "Together",
+    "context_length": 0,
+    "license": null
+  },
+  {
+    "id": "google/gemma-3n-E4B-it",
+    "display_name": "Gemma 3N E4B Instruct",
+    "type": "chat",
+    "organization": "Google",
+    "context_length": 32768,
+    "license": "gemma"
+  },
+  {
+    "id": "black-forest-labs/FLUX.1.1-pro",
+    "display_name": "FLUX1.1 [pro]",
+    "type": "image",
+    "organization": "Black Forest Labs",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
+    "display_name": "Qwen3 Coder 480B A35B Instruct Fp8",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "black-forest-labs/FLUX.1-kontext-pro",
+    "display_name": "FLUX.1 Kontext [pro]",
+    "type": "image",
+    "organization": "Black Forest Labs",
+    "context_length": 0,
+    "license": null
+  },
+  {
+    "id": "vidu/vidu-q1",
+    "display_name": "Vidu Q1",
+    "type": "video",
+    "organization": "Vidu",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "openai/sora-2",
+    "display_name": "Sora 2",
+    "type": "video",
+    "organization": "OpenAI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "kwaivgI/kling-2.1-standard",
+    "display_name": "Kling 2.1 Standard",
+    "type": "video",
+    "organization": "kwaivgI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/imagen-4.0-fast",
+    "display_name": "Google Imagen 4.0 Fast",
+    "type": "image",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "kwaivgI/kling-2.1-master",
+    "display_name": "Kling 2.1 Master",
+    "type": "video",
+    "organization": "kwaivgI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/veo-3.0-audio",
+    "display_name": "Google Veo 3.0 + Audio",
+    "type": "video",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Wan-AI/Wan2.2-I2V-A14B",
+    "display_name": "Wan 2.2 I2V",
+    "type": "video",
+    "organization": "Wan-AI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/veo-2.0",
+    "display_name": "Google Veo 2.0",
+    "type": "video",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/veo-3.0-fast",
+    "display_name": "Google Veo 3.0 Fast",
+    "type": "video",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "kwaivgI/kling-2.0-master",
+    "display_name": "Kling 2.0 Master",
+    "type": "video",
+    "organization": "kwaivgI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "pixverse/pixverse-v5",
+    "display_name": "PixVerse v5",
+    "type": "video",
+    "organization": "PixVerse",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "openai/sora-2-pro",
+    "display_name": "Sora 2 Pro",
+    "type": "video",
+    "organization": "OpenAI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "ByteDance/Seedance-1.0-lite",
+    "display_name": "ByteDance Seedance 1.0 Lite",
+    "type": "video",
+    "organization": "ByteDance",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "kwaivgI/kling-1.6-pro",
+    "display_name": "Kling 1.6 Pro",
+    "type": "video",
+    "organization": "kwaivgI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "vidu/vidu-2.0",
+    "display_name": "Vidu 2.0",
+    "type": "video",
+    "organization": "Vidu",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "kwaivgI/kling-2.1-pro",
+    "display_name": "Kling 2.1 Pro",
+    "type": "video",
+    "organization": "kwaivgI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Virtue-AI/VirtueGuard-Text-Lite",
+    "display_name": "Virtueguard Text Lite",
+    "type": "moderation",
+    "organization": "Virtue AI",
+    "context_length": 32768,
+    "license": "unknown"
+  },
+  {
+    "id": "intfloat/multilingual-e5-large-instruct",
+    "display_name": "Multilingual E5 Large Instruct",
+    "type": "embedding",
+    "organization": "Intfloat",
+    "context_length": 514,
+    "license": "mit"
+  },
+  {
+    "id": "essentialai/rnj-1-instruct",
+    "display_name": "EssentialAI Rnj-1 Instruct",
+    "type": "chat",
+    "organization": "Essential AI",
+    "context_length": 32768,
+    "license": null
+  },
+  {
+    "id": "google/gemma-2b-it-Ishan",
+    "display_name": "Gemma 2B It",
+    "type": "chat",
+    "organization": "Google",
+    "context_length": 8192,
+    "license": "gemma"
+  },
+  {
+    "id": "arize-ai/qwen-2-1.5b-instruct",
+    "display_name": "Arize AI Qwen 2 1.5B Instruct",
+    "type": "chat",
+    "organization": "Togethercomputer",
+    "context_length": 32768,
+    "license": null
+  },
+  {
+    "id": "hexgrad/Kokoro-82M",
+    "display_name": "Kokoro 82M",
+    "type": "audio",
+    "organization": "Hexgrad",
+    "context_length": null,
+    "license": "apache2"
+  },
+  {
+    "id": "google/gemini-3-pro-image",
+    "display_name": "Gemini 3 (Nano Banana 2 Pro)",
+    "type": "image",
+    "organization": "Google",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-7B-Instruct-Turbo",
+    "display_name": "Qwen2.5 7B Instruct Turbo",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 32768,
+    "license": "Qwen"
+  },
+  {
+    "id": "moonshotai/Kimi-K2-Instruct-0905",
+    "display_name": "Kimi K2-Instruct 0905",
+    "type": "chat",
+    "organization": "Moonshotai",
+    "context_length": 262144,
+    "license": "other modified-mit"
+  },
+  {
+    "id": "black-forest-labs/FLUX.2-pro",
+    "display_name": "FLUX.2 [pro]",
+    "type": "image",
+    "organization": "Black Forest Labs",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "black-forest-labs/FLUX.2-dev",
+    "display_name": "FLUX.2 [dev]",
+    "type": "image",
+    "organization": "Black Forest Labs",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-VL-8B-Instruct",
+    "display_name": "Qwen3-VL-8B-Instruct",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "Wan-AI/Wan2.6-image",
+    "display_name": "Wan 2.6 Image",
+    "type": "image",
+    "organization": "Wan-AI",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "pixverse/pixverse-v5.6",
+    "display_name": "PixVerse v5",
+    "type": "video",
+    "organization": "PixVerse",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "black-forest-labs/FLUX.1-krea-dev",
+    "display_name": "FLUX.1 Krea [dev]",
+    "type": "image",
+    "organization": "Black Forest Labs",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/LlamaGuard-2-8b",
+    "display_name": "Meta Llama Guard 2 8B",
+    "type": "moderation",
+    "organization": "Meta",
+    "context_length": 8192,
+    "license": "Llama-3 (Other)"
+  },
+  {
+    "id": "meta-llama/Llama-3.2-3B-Instruct-Turbo",
+    "display_name": "Meta Llama 3.2 3B Instruct Turbo",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 131072,
+    "license": "Llama-3.1 (Other)"
+  },
+  {
+    "id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+    "display_name": "Mixtral-8x7B Instruct v0.1",
+    "type": "chat",
+    "organization": "mistralai",
+    "context_length": 32768,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3-8B-Instruct-Lite",
+    "display_name": "Meta Llama 3 8B Instruct Lite",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 8192,
+    "license": "Llama-3 (Other)"
+  },
+  {
+    "id": "mixedbread-ai/Mxbai-Rerank-Large-V2",
+    "display_name": "Mxbai Rerank Large V2",
+    "type": "rerank",
+    "organization": "Mixedbread AI",
+    "context_length": 32768,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "mistralai/Mistral-Small-24B-Instruct-2501",
+    "display_name": "Mistral Small (24B) Instruct 25.01",
+    "type": "chat",
+    "organization": "mistralai",
+    "context_length": 32768,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "black-forest-labs/FLUX.1-schnell",
+    "display_name": "FLUX.1 Schnell",
+    "type": "image",
+    "organization": "Black Forest Labs",
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-3.1-405B-Instruct",
+    "display_name": "Meta Llama 3.1 405B Instruct",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 4096,
+    "license": "llama"
+  },
+  {
+    "id": "meta-llama/Llama-3-70b-hf",
+    "display_name": "Meta Llama 3 70B HF",
+    "type": "language",
+    "organization": "Meta",
+    "context_length": 8192,
+    "license": "llama3"
+  },
+  {
+    "id": "moonshotai/Kimi-K2.5",
+    "display_name": "Kimi K2.5",
+    "type": "chat",
+    "organization": "Moonshot AI",
+    "context_length": 262144,
+    "license": "other modified-mit"
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+    "display_name": "Meta Llama 3.1 70B Instruct Turbo",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 131072,
+    "license": "Llama-3.1 (Other)"
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3.1-70B-Instruct-Reference",
+    "display_name": "Meta Llama 3.1 70B Instruct",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 8192,
+    "license": "llama"
+  },
+  {
+    "id": "zai-org/GLM-4.6",
+    "display_name": "Glm 4.6 Fp8",
+    "type": "chat",
+    "organization": "Zai Org",
+    "context_length": 202752,
+    "license": "mit"
+  },
+  {
+    "id": "meta-llama/Llama-3.2-1B-Instruct",
+    "display_name": "Meta Llama 3.2 1B Instruct",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 131072,
+    "license": "llama3.2"
+  },
+  {
+    "id": "Qwen/Qwen2.5-14B-Instruct",
+    "display_name": "Qwen 2.5 14B Instruct",
+    "type": "chat",
+    "organization": "",
+    "context_length": 32768,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3.1-8B-Instruct-Reference",
+    "display_name": "Meta Llama 3.1 8B Instruct",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 16384,
+    "license": "Llama-3.1 (Other)"
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3-8B-Instruct",
+    "display_name": "Meta Llama 3 8B Instruct",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 8192,
+    "license": "Llama-3 (Other)"
+  },
+  {
+    "id": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    "display_name": "Llama 4 Scout Instruct (17Bx16E)",
+    "type": "chat",
+    "organization": "Meta",
+    "context_length": 1048576,
+    "license": "llama4"
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-R1",
+    "display_name": "DeepSeek R1-0528",
+    "type": "chat",
+    "organization": "DeepSeek",
+    "context_length": 163840,
+    "license": ""
+  },
+  {
+    "id": "openai/gpt-oss-20b",
+    "display_name": "OpenAI GPT-OSS 20B",
+    "type": "chat",
+    "organization": "OpenAI",
+    "context_length": 131072,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-V3.1",
+    "display_name": "Deepseek V3.1",
+    "type": "chat",
+    "organization": "DeepSeek",
+    "context_length": 131072,
+    "license": "mit"
+  },
+  {
+    "id": "Qwen/Qwen3-235B-A22B-Instruct-2507-tput",
+    "display_name": "Qwen3 235B A22B Instruct 2507 FP8 Throughput",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "BAAI/bge-large-en-v1.5",
+    "display_name": "BAAI-Bge-Large-1.5",
+    "type": "embedding",
+    "organization": "BAAI",
+    "context_length": null,
+    "license": "MIT"
+  },
+  {
+    "id": "Qwen/Qwen3-235B-A22B-Thinking-2507",
+    "display_name": "Qwen3 235B A22B Thinking 2507 FP8",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 262144,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "Qwen/Qwen2.5-72B-Instruct",
+    "display_name": "Qwen2.5 72B Instruct",
+    "type": "chat",
+    "organization": "Qwen",
+    "context_length": 32768,
+    "license": "Qwen"
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+    "display_name": "DeepSeek R1 Distill Llama 70B",
+    "type": "chat",
+    "organization": "DeepSeek",
+    "context_length": 131072,
+    "license": "mit"
+  },
+  {
+    "id": "openai/gpt-oss-120b",
+    "display_name": "OpenAI GPT-OSS 120B",
+    "type": "chat",
+    "organization": "OpenAI",
+    "context_length": 131072,
+    "license": "other"
+  },
+  {
+    "id": "mistralai/Mistral-7B-Instruct-v0.3",
+    "display_name": "Mistral (7B) Instruct v0.3",
+    "type": "chat",
+    "organization": "mistralai",
+    "context_length": 32768,
+    "license": "apache-2.0"
+  },
+  {
+    "id": "nim/mistralai/mixtral-8x22b-instruct-v01",
+    "display_name": "nim/mistralai/mixtral-8x22b-instruct-v01",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-V3-0324",
+    "display_name": "Deepseek V3 0324",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-235B-A22B-fp8",
+    "display_name": "Qwen3 235B A22B FP8",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2-72B-Instruct",
+    "display_name": "Qwen2 72B Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "MiniMaxAI/MiniMax-M2.1",
+    "display_name": "Minimax M2.1",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "mistralai/Mixtral-8x22B-Instruct-v0.1",
+    "display_name": "Mixtral 8X22b Instruct V0.1",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "mistralai/Ministral-3-14B-Instruct-2512",
+    "display_name": "Ministral 3 14B Instruct 2512",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-Coder-32B-Instruct",
+    "display_name": "Qwen 2.5 Coder 32B Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "rime-labs/rime-arcana-v3-turbo",
+    "display_name": "Rime Labs Arcana v3 Turbo",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-V3.2-Exp",
+    "display_name": "Deepseek V3.2 Exp",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "togethercomputer/nltpt-guard-w8a16",
+    "display_name": "Nltpt Guard W8a16",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nim/meta/llama-3.3-70b-instruct",
+    "display_name": "nim/meta/llama-3.3-70b-instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-3-4b-pt",
+    "display_name": "Gemma 3 4B Pt",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nim/mistralai/mixtral-8x7b-instruct-v01",
+    "display_name": "nim/mistralai/mixtral-8x7b-instruct-v01",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-3-27b-it",
+    "display_name": "Gemma 3 27B It",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-V3-DE",
+    "display_name": "Deepseek V3",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nim/nvidia/llama-3.1-nemotron-70b-instruct",
+    "display_name": "nim/nvidia/llama-3.1-nemotron-70b-instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "mixedbread-ai/mxbai-rerank-large-v2",
+    "display_name": "Mxbai Rerank Large V2",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-7B-Instruct",
+    "display_name": "Qwen2.5 7B Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "togethercomputer/DeepCoder-14B-Preview",
+    "display_name": "Deepcoder 14B Preview",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2-72B",
+    "display_name": "Qwen 2 (72B)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-14B-Base",
+    "display_name": "Qwen3 14B Base",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-VL-72B-Instruct",
+    "display_name": "Qwen2.5-VL (72B) Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-32B",
+    "display_name": "Qwen2.5 32B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3-8B",
+    "display_name": "Meta Llama 3 8B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-V3.1-Terminus",
+    "display_name": "Deepseek V3.1 Terminus",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3.1-8B",
+    "display_name": "Meta Llama 3.1 8B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "MiniMaxAI/MiniMax-M1-40k",
+    "display_name": "Minimax M1 40K",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "upstage/SOLAR-10.7B-Instruct-v1.0",
+    "display_name": "Upstage SOLAR Instruct v1 (11B)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/deepseek-coder-33b-instruct",
+    "display_name": "Deepseek Coder 33B Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-3.3-70B-Instruct",
+    "display_name": "meta-llama/Llama-3.3-70B-Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO",
+    "display_name": "Nous Hermes 2 Mixtral 8X7B Dpo",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-3.2-3B",
+    "display_name": "Meta Llama 3.2 3B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "arcee-ai/trinity-large-preview",
+    "display_name": "Trinity Large Preview",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-3-8b-chat-hf",
+    "display_name": "Meta Llama 3 8B Instruct Reference",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3.1-70B-Instruct",
+    "display_name": "Meta Llama 3.1 70B Instruct Turbo",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-30B-A3B",
+    "display_name": "Qwen3 30B A3b",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-32B-FP8",
+    "display_name": "Qwen3 32B Fp8",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "rime-labs/rime-mist-v2",
+    "display_name": "Rime Labs Mist v2",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-1.7B-Base",
+    "display_name": "Qwen3 1.7B Base",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "facebook/cwm",
+    "display_name": "Facebook CWM",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2-1.5B",
+    "display_name": "Qwen 2 (1.5B)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-V3.2",
+    "display_name": "Deepseek V3.2",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-VL-235B-A22B-Thinking-FP8",
+    "display_name": "Qwen3 Vl 235B A22b Thinking Fp8",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nim/nvidia/llama-3.3-nemotron-super-49b-v1",
+    "display_name": "nim/nvidia/llama-3.3-nemotron-super-49b-v1",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-1.5B-Instruct",
+    "display_name": "Qwen2.5 1.5B Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepcogito/cogito-v1-preview-qwen-14B",
+    "display_name": "Cogito V1 Preview Qwen 14B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "sarvamai/sarvam-m",
+    "display_name": "Sarvam M",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-8B",
+    "display_name": "Qwen3 8B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-72B",
+    "display_name": "Qwen2.5 72B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2-1.5B-Instruct",
+    "display_name": "Qwen 2 Instruct (1.5B)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-3-27b-pt",
+    "display_name": "Gemma 3 27B Pt",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Salesforce/Llama-Rank-V1",
+    "display_name": "Salesforce Llama Rank V1 (8B)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-2-9b-it",
+    "display_name": "Gemma 2 9B It",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nim/nv-mistralai/mistral-nemo-12b-instruct",
+    "display_name": "nim/nv-mistralai/mistral-nemo-12b-instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-2-13b-chat-hf",
+    "display_name": "LLaMA-2 Chat (13B)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "MiniMaxAI/MiniMax-M1-80k",
+    "display_name": "Minimax M1 80K",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-3.1-8B-Instruct",
+    "display_name": "Llama 3.1 8B Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepcogito/cogito-v1-preview-llama-3B",
+    "display_name": "Cogito V1 Preview Llama 3B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+    "display_name": "DeepSeek R1 Distill Qwen 7B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-4B",
+    "display_name": "",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+    "display_name": "Nvidia Nemotron 3 Nano 30B A3b Bf16",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-4B-Base",
+    "display_name": "Qwen3 4B Base",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2-7B",
+    "display_name": "Qwen 2 (7B)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nim/meta/llama-3.1-70b-instruct",
+    "display_name": "nim/meta/llama-3.1-70b-instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-2-7b-chat-hf",
+    "display_name": "meta-llama/Llama-2-7b-chat-hf",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-VL-235B-A22B-Instruct-FP8",
+    "display_name": "Qwen3-VL-235B-A22B-Instruct-FP8",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-3B-Instruct",
+    "display_name": "Qwen2.5 3B Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-7B",
+    "display_name": "Qwen2.5 7B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+    "display_name": "DeepSeek R1 Distill Qwen 14B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "togethercomputer/EssentialAI-RNJ-1-Instruct",
+    "display_name": "EssentialAI Rnj-1 Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-4-Scout-17B-16E",
+    "display_name": "Llama 4 Scout (17Bx16E)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2-VL-72B-Instruct",
+    "display_name": "Qwen2-VL (72B) Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepcogito/cogito-v1-preview-llama-70B",
+    "display_name": "Cogito V1 Preview Llama 70B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nim/meta/llama-3.2-90b-vision-instruct",
+    "display_name": "nim/meta/llama-3.2-90b-vision-instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nim/meta/llama-3.1-8b-instruct",
+    "display_name": "nim/meta/llama-3.1-8b-instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-0.6B-Base",
+    "display_name": "Qwen3 0.6B Base",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepcogito/cogito-v1-preview-qwen-32B",
+    "display_name": "Cogito V1 Preview Qwen 32B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "codellama/CodeLlama-7b-hf",
+    "display_name": "Code Llama (7B)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3-70B-Instruct-Turbo",
+    "display_name": "Meta Llama 3 70B Instruct Turbo",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-3-4b-it",
+    "display_name": "Gemma 3 4b it",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "MiniMaxAI/MiniMax-M2",
+    "display_name": "MiniMax M2",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-14B",
+    "display_name": "Qwen2.5 14B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-32B-Instruct",
+    "display_name": "Qwen2.5 32B Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-3B",
+    "display_name": "Qwen2.5 3B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "mistralai/Mistral-7B-v0.1",
+    "display_name": "Mistral 7B v0.1",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "minimax/speech-2.6-turbo",
+    "display_name": "Minimax Speech 2.6 Turbo",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepcogito/cogito-v1-preview-llama-8B",
+    "display_name": "Cogito V1 Preview Llama 8B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-30B-A3B-Base",
+    "display_name": "Qwen3 30B A3b Base",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "display_name": "Meta Llama 3.1 8B Instruct Reference",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "agentica-org/DeepCoder-14B-Preview",
+    "display_name": "Deepcoder 14B Preview",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-3-1b-it",
+    "display_name": "Gemma 3 1b it",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "allenai/Molmo-7B-D-0924",
+    "display_name": "Molmo 7B D 0924",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-32B",
+    "display_name": "Qwen3 32B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/QwQ-32B",
+    "display_name": "Qwen QwQ-32B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-1.5B",
+    "display_name": "Qwen2.5 1.5B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-V3-Base",
+    "display_name": "Deepseek V3 Base",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-Next-80B-A3B-Instruct-FP8",
+    "display_name": "Qwen3 Next 80B A3b Instruct Fp8",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-4-Scout-17B-16E-Instruct-64k",
+    "display_name": "Llama 4 Scout 17B 16E Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
+    "display_name": "Llama 3.1 Nemotron 70B Instruct HF",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-3-270m-it",
+    "display_name": "Gemma 3 270M It",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-2b-it",
+    "display_name": "Gemma 2B It",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "mistralai/Devstral-Small-2505",
+    "display_name": "Devstral Small 2505",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-14B",
+    "display_name": "Qwen3 14B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-V3.1-Base",
+    "display_name": "Deepseek V3.1 Base",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/QwQ-32B-Preview",
+    "display_name": "Qwen QwQ-32B-Preview",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "salesforce/texteval-v3-7b-qwen-b",
+    "display_name": "Salesforce Textevalv3 7B Qwen",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "mistralai/Magistral-Small-2506",
+    "display_name": "Magistral Small 2506",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "mistralai/Mistral-7B-Instruct-v0.2",
+    "display_name": "Mistral (7B) Instruct v0.2",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "rime-labs/rime-arcana-v2",
+    "display_name": "Rime Labs Arcana v2",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Meta-Llama-3.1-70B",
+    "display_name": "Llama 3.1 70B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "salesforce/sarvam-m",
+    "display_name": "Sarvam M",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "togethercomputer/deepcogito-cogito-v2-preview-llama-109B-MoE",
+    "display_name": "Deepcogito Cogito V2 Preview Llama 109B Moe",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-3-12b-it",
+    "display_name": "Gemma 3 12B It",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "display_name": "Qwen3 30B A3b Instruct 2507",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-R1-0528",
+    "display_name": "Deepseek R1 0528",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-3.1-405B",
+    "display_name": "Llama 3.1 405B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "mistralai/Mixtral-8x7B-v0.1",
+    "display_name": "Mixtral 8X7b V0.1",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-3.2-1B",
+    "display_name": "Llama 3.2 1B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "nim/meta/llama-3.2-11b-vision-instruct",
+    "display_name": "nim/meta/llama-3.2-11b-vision-instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "google/gemma-2-27b-it",
+    "display_name": "Gemma-2 Instruct (27B)",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    "display_name": "Qwen3 Coder 30B A3b Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-1.7B",
+    "display_name": "Qwen3 1.7B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "togethercomputer/meta-llama-3.1-8B-Instruct-AWQ-INT4",
+    "display_name": "Meta Llama 3.1 8B Instruct Awq Int4",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-0.6B",
+    "display_name": "Qwen3 0.6B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "rica40325/10_14dpo",
+    "display_name": "10_14Dpo",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepcogito/cogito-v1-preview-llama-70B-Turbo",
+    "display_name": "Cogito V1 Preview Llama 70B Turbo",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "zai-org/GLM-4.5V",
+    "display_name": "Glm 4.5V",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "rime-labs/rime-arcana-v3",
+    "display_name": "Rime Labs Arcana v3",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-4-Maverick-17B-128E",
+    "display_name": "Llama 4 Maverick 17B 128E",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "mistralai/Mistral-7B-Instruct-v0.1",
+    "display_name": "Mistral (7B) Instruct v0.1",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "smarterdx/atlas-v3-spotlight",
+    "display_name": "Atlas V3 Spotlight",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen2.5-72B-Instruct-Turbo",
+    "display_name": "Qwen2.5 72B Instruct Turbo",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+    "display_name": "DeepSeek R1 Distill Qwen 1.5B",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "meta-llama/Llama-3.2-3B-Instruct",
+    "display_name": "Meta Llama 3.2 3B Instruct",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "togethercomputer/Larp-Qwen14b-250805",
+    "display_name": "Larp Qwen14b 250805",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  },
+  {
+    "id": "Qwen/Qwen3-8B-Base",
+    "display_name": "Qwen3 8B Base",
+    "type": null,
+    "organization": null,
+    "context_length": null,
+    "license": null
+  }
+]

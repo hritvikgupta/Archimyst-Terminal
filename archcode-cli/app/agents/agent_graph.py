@@ -518,6 +518,13 @@ def _get_model(role: str = "coder"):
             base_url="https://api.groq.com/openai/v1",
         )
 
+    if provider == "together":
+        return ChatOpenAI(
+            model=model_id,
+            api_key=config.together_api_key,
+            base_url="https://api.together.xyz/v1",
+        )
+
     # Default: OpenRouter
     return ChatOpenAI(
         model=model_id,
