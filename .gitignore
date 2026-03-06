@@ -1,10 +1,9 @@
-# Build artifacts
+# Build and Release artifacts
 archcode-cli/build/
 archcode-cli/dist/
 archcode-cli/*.spec
-
-# Virtual environments
-archcode-cli/.build-venv/
+public/
+bin/
 
 # Python
 __pycache__/
@@ -18,16 +17,24 @@ __pycache__/
 .vscode/
 .idea/
 
-# Aider
-.aider*
-
 # Local history/state
 .archcode_history
+.archcode/
 archcode-cli/.archcode/
+.axon/
+archcode-cli/.axon/
 
-# Release binaries (hosted on GitHub Releases, not in repo)
-public/releases/
-
-# Legacy backups
-archcode-cli/legacy-archcode-terminal-backup/
-archcode-cli/archive/
+# Data and Charts
+charts/
+archcode-cli/charts/
+arcdata
+archcode-cli/arcdata
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.csv
+*.xlsx
+*.tar.gz
+*.pkg
+*.pyz

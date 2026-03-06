@@ -3,6 +3,7 @@ rich
 prompt-toolkit
 requests
 packaging
+plotext
 agno
 langgraph
 langchain
@@ -32,3 +33,16 @@ inquirer==3.1.4
 chromadb>=0.5.0
 onnxruntime>=1.17.0
 axoniq>=0.2.3
+# Data Agent Tools
+duckdb
+pandas
+openpyxl
+reportlab
+yfinance
+google-api-python-client
+google-auth
+matplotlib
+sqlalchemy
+psycopg2-binary
+asyncpg
+greenlet

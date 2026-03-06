@@ -37,38 +37,45 @@ from mcp_manager import mcp_manager
 from app.runtime.plan_file import save_plan, get_plan_context, update_file_status, mark_plan_complete
 from app.runtime.plan_tracker import create_tracker, get_tracker, set_tracker
 
-
 class CliTheme:
     """Centralized CLI visual theme configuration."""
 
-    PROMPT_STYLE = Style.from_dict(
-        {
-            "prompt": "#ff8888 bold",
-            "border": "#555555",  # dim box-drawing characters
+    @staticmethod
+    def _get_accent_color():
+        """Get accent color based on agent mode."""
+        return "#22c55e" if getattr(config, 'agent_mode', None) == "data" else "#ff8888"
+
+    @classmethod
+    def get_prompt_style(cls):
+        """Get prompt style with dynamic color."""
+        return Style.from_dict({
+            "prompt": f"{cls._get_accent_color()} bold",
+            "border": "#555555",
             "completion-menu": "bg:#161616 #ffffff",
             "completion-menu.completion.current": "bg:#444444 #ffffff bold",
             "completion-menu.meta": "bg:#161616 #888888",
             "completion-menu.meta.completion.current": "bg:#444444 #888888",
             "scrollbar.background": "bg:#161616",
             "scrollbar.button": "bg:#444444",
-        }
-    )
+        })
 
-    RICH_THEME = Theme(
-        {
+    @classmethod
+    def get_rich_theme(cls):
+        """Get rich theme with dynamic color."""
+        color = cls._get_accent_color()
+        return Theme({
             "markdown.h1": "bold white",
             "markdown.h2": "bold white",
             "markdown.h3": "bold white",
             "markdown.h4": "bold white",
             "markdown.h5": "bold white",
             "markdown.h6": "bold white",
-            "markdown.link": "#ff8888",
-            "markdown.code": "#ff8888",
-            "markdown.item.bullet": "#ff8888",
-            "markdown.item.number": "#ff8888",
+            "markdown.link": color,
+            "markdown.code": color,
+            "markdown.item.bullet": color,
+            "markdown.item.number": color,
             "markdown.block_quote": "white dim",
-        }
-    )
+        })
 
 
 SYSTEM_PROMPT = """You are Archimyst (ArchCode), a Council of Agents.
@@ -110,7 +117,7 @@ class PlanActionSelector:
                 if i > 0:
                     parts.append(("", "   "))
                 if i == state["selected"]:
-                    parts.append(("#ff8888 bold reverse", f" {opt} "))
+                    parts.append((f"{CliTheme._get_accent_color()} bold reverse", f" {opt} "))
                 else:
                     parts.append(("ansicyan", f" {opt} "))
             parts.append(("", "\n  "))
@@ -231,27 +238,29 @@ class ArchCodeCliRuntime:
     TOKEN_DISPLAY_FACTOR = 0.1
 
     def __init__(self):
-        self.console = Console(theme=CliTheme.RICH_THEME, style="white on #161616")
+        self.console = Console(theme=CliTheme.get_rich_theme(), style="white on #161616")
         self.version_manager = VersionManager(self.console)
         self.runtime: Optional[RuntimeImports] = None
         self.cmd_handler = None
         self.session = None
         self.agent = None
+        self.run_event_cls = None  # Set by _build_agent; differs per agent framework
         self.session_id = "N/A"
 
     def _load_runtime_imports(self) -> RuntimeImports:
         if self.runtime is not None:
             return self.runtime
 
+        _ac = CliTheme._get_accent_color()
         with self.console.status(
-            "[bold #ff8888]●[/bold #ff8888] Loading agents...",
+            f"[bold {_ac}]●[/bold {_ac}] Loading agents...",
             spinner="dots",
-            spinner_style="#ff8888",
+            spinner_style=_ac,
         ):
             import requests  # noqa: F401  # warm import only
             from packaging import version as v_parser  # noqa: F401  # warm import only
 
-            from app.agents.agent_graph import RunEvent, create_langgraph_agent as create_agent
+            from app.agents.agent_graph import RunEvent, create_langgraph_agent
             from background_task_manager import get_task_manager
             from commands import CommandHandler
             from diff_manager import get_diff_manager
@@ -260,7 +269,7 @@ class ArchCodeCliRuntime:
 
         self.runtime = RuntimeImports(
             RunEvent=RunEvent,
-            create_agent=create_agent,
+            create_agent=create_langgraph_agent,
             CommandHandler=CommandHandler,
             get_diff_manager=get_diff_manager,
             set_task_context=set_task_context,
@@ -310,7 +319,7 @@ class ArchCodeCliRuntime:
             self.console.print(
                 Panel(
                     f"[bold green]🚀 New Version Available: v{latest}[/bold green]\n"
-                    f"[dim]Run [/dim][bold #ff8888]/update[/bold #ff8888][dim] or visit {url}[/dim]",
+                    f"[dim]Run [/dim][bold {CliTheme._get_accent_color()}]/update[/bold {CliTheme._get_accent_color()}][dim] or visit {url}[/dim]",
                     border_style="green",
                     padding=(0, 1),
                 )
@@ -329,9 +338,9 @@ class ArchCodeCliRuntime:
             self.console.print(f"[dim]○ RAG sync skipped: {e}[/dim]\n")
 
     def _bootstrap_axon(self):
-        """Index codebase with Axon on startup (foreground with spinner)."""
+        """Index codebase with Axon on startup (background, non-blocking)."""
         import subprocess
-        from rich.status import Status
+        import threading
         cwd = os.getcwd()
         axon_dir = os.path.join(cwd, ".axon")
         try:
@@ -340,12 +349,24 @@ class ArchCodeCliRuntime:
                 self.console.print("[dim]Axon not found, skipping graph index.[/dim]")
                 return
             label = "Updating" if os.path.isdir(axon_dir) else "Building"
-            with Status(f"[bold cyan]{label} code graph index...", console=self.console):
-                result = subprocess.run("axon analyze .", shell=True, capture_output=True, text=True, timeout=300)
-            if result.returncode == 0:
-                self.console.print("[green]✓ Code graph ready.[/green]")
-            else:
-                self.console.print(f"[yellow]Axon indexing warning: {result.stderr[:200]}[/yellow]")
+            self.console.print(f"[dim]{label} code graph index in background...[/dim]")
+
+            def _run_axon_bg():
+                try:
+                    result = subprocess.run(
+                        "axon analyze .", shell=True,
+                        capture_output=True, text=True, timeout=300,
+                        cwd=cwd,
+                    )
+                    if result.returncode == 0:
+                        self.console.print("[green]✓ Code graph ready.[/green]")
+                    else:
+                        self.console.print(f"[yellow]Axon indexing warning: {result.stderr[:200]}[/yellow]")
+                except Exception as e:
+                    self.console.print(f"[dim]Axon indexing skipped: {e}[/dim]")
+
+            t = threading.Thread(target=_run_axon_bg, daemon=True)
+            t.start()
         except Exception as e:
             self.console.print(f"[dim]Axon init skipped: {e}[/dim]")
 
@@ -358,16 +379,17 @@ class ArchCodeCliRuntime:
             total_count = len(_sm.list_skills())
 
             if global_count > 0:
-                self.console.print(
-                    f"[green]✓[/green] [dim]{total_count} skills available ({global_count} bundled)[/dim]\n"
-                )
+                if config.agent_mode != "data":
+                    self.console.print(
+                        f"[green]✓[/green] [dim]{total_count} skills available ({global_count} bundled)[/dim]\n"
+                    )
                 return
 
             if total_count > 0:
-                # Project-local skills only (no global bundle)
-                self.console.print(
-                    f"[green]✓[/green] [dim]{total_count} project skills loaded[/dim]\n"
-                )
+                if config.agent_mode != "data":
+                    self.console.print(
+                        f"[green]✓[/green] [dim]{total_count} project skills loaded[/dim]\n"
+                    )
                 return
 
             # No skills at all — try to download the bundle from the backend
@@ -380,10 +402,11 @@ class ArchCodeCliRuntime:
             backend_url = os.getenv("BACKEND_URL") or "https://archflow-backend.fly.dev"
             bundle_url = f"{backend_url}/api/archcode/skills/bundle"
 
+            _ac = CliTheme._get_accent_color()
             with self.console.status(
-                "[bold #ff8888]●[/bold #ff8888] Downloading skills...",
+                f"[bold {_ac}]●[/bold {_ac}] Downloading skills...",
                 spinner="dots",
-                spinner_style="#ff8888",
+                spinner_style=_ac,
             ):
                 # Try backend bundle first
                 try:
@@ -522,13 +545,14 @@ class ArchCodeCliRuntime:
         if mcp_manager.config_path.exists():
             try:
                 mcp_manager.connect_all_sync()
-                if mcp_manager.is_connected():
+                if mcp_manager.is_connected() and config.agent_mode != "data":
                     self.console.print(
                         f"[green]✓[/green] [dim]MCP: {mcp_manager.get_summary()}[/dim]\n"
                     )
                 atexit.register(mcp_manager.cleanup)
             except Exception as e:
-                self.console.print(f"[dim]○ MCP servers skipped: {e}[/dim]\n")
+                if config.agent_mode != "data":
+                    self.console.print(f"[dim]○ MCP servers skipped: {e}[/dim]\n")
 
     def _build_command_handler(self, runtime: RuntimeImports):
         self.cmd_handler = runtime.CommandHandler(
@@ -542,7 +566,7 @@ class ArchCodeCliRuntime:
 
         self.session = PromptSession(
             history=FileHistory(".archcode_history"),
-            style=CliTheme.PROMPT_STYLE,
+            style=CliTheme.get_prompt_style(),
             completer=merged_completer,
             complete_while_typing=True,
             key_bindings=get_at_file_key_bindings(),
@@ -571,11 +595,22 @@ class ArchCodeCliRuntime:
         except Exception:
             pass
 
-        self.agent = runtime.create_agent(
-            session_id=_agent_session_id,
-            extra_tools=_extra_tools if _extra_tools else None,
-            skills=_agno_skills,
-        )
+        # Check agent mode and create appropriate agent
+        if config.agent_mode == "data":
+            from app.agents.data.agent import create_data_agent
+            from app.agents.agent_graph import RunEvent as DataRunEvent
+            self.agent = create_data_agent(
+                session_id=_agent_session_id,
+                extra_tools=_extra_tools if _extra_tools else None,
+            )
+            self.run_event_cls = DataRunEvent
+        else:
+            self.agent = runtime.create_agent(
+                session_id=_agent_session_id,
+                extra_tools=_extra_tools if _extra_tools else None,
+                skills=_agno_skills,
+            )
+            self.run_event_cls = runtime.RunEvent
         return self.agent
 
     @staticmethod
@@ -623,7 +658,226 @@ class ArchCodeCliRuntime:
             fp = tool_args.get("file_path", "")
             name = os.path.basename(fp) if fp else ""
             return f"Writing {name}" if name else "Implementing new file"
-        return tool_descriptions.get(tool_name, tool_name)
+        # --- Data agent tools ---
+        if tool_name == "search_files":
+            pat = tool_args.get("pattern", "")
+            return f"Searching files: {pat}" if pat else "Searching files"
+        if tool_name == "save_file":
+            fn = tool_args.get("file_name", "")
+            return f"Saving {fn}" if fn else "Saving file"
+        if tool_name == "read_file_chunk":
+            fn = tool_args.get("file_name", "")
+            return f"Reading {fn}" if fn else "Reading file chunk"
+        if tool_name == "list_files":
+            d = tool_args.get("directory", ".")
+            return f"Listing files in {d}"
+        if tool_name == "run_query":
+            q = tool_args.get("query", "")
+            return f"DuckDB: {q[:60]}" if q else "Running DuckDB query"
+        if tool_name == "show_tables":
+            return "Listing DuckDB tables"
+        if tool_name in ("describe_table", "summarize_table"):
+            tbl = tool_args.get("table", "") or tool_args.get("table_name", "")
+            label = "Describing" if tool_name == "describe_table" else "Summarizing"
+            return f"{label} table: {tbl}" if tbl else f"{label} table"
+        if tool_name == "inspect_query":
+            q = tool_args.get("query", "")
+            return f"Inspecting query: {q[:50]}" if q else "Inspecting query plan"
+        if tool_name in ("create_table_from_path", "load_local_path_to_table", "load_local_csv_to_table"):
+            p = tool_args.get("path", "")
+            name = os.path.basename(p) if p else ""
+            return f"Loading {name} into DuckDB" if name else "Loading file into DuckDB"
+        if tool_name == "export_table_to_path":
+            tbl = tool_args.get("table", "")
+            fmt = tool_args.get("format", "")
+            return f"Exporting {tbl} as {fmt}" if tbl else "Exporting table"
+        if tool_name == "run_sql_query":
+            q = tool_args.get("query", "")
+            return f"SQL: {q[:60]}" if q else "Running SQL query"
+        if tool_name == "list_tables":
+            return "Listing SQL tables"
+        if tool_name == "run_python_code":
+            code = tool_args.get("code", "")
+            first_line = code.split("\n")[0][:50] if code else ""
+            return f"Python: {first_line}" if first_line else "Running Python code"
+        if tool_name == "run_python_file_return_variable":
+            fn = tool_args.get("file_name", "")
+            return f"Running {fn}" if fn else "Running Python file"
+        if tool_name == "run_shell_command":
+            cmd = tool_args.get("command", "")
+            return f"Shell: {cmd[:60]}" if cmd else "Running shell command"
+        if tool_name == "read_csv_file":
+            fn = tool_args.get("file_path", "") or tool_args.get("csv_name", "")
+            name = os.path.basename(fn) if fn else ""
+            return f"Reading CSV: {name}" if name else "Reading CSV file"
+        if tool_name == "get_csv_columns":
+            fn = tool_args.get("file_path", "")
+            name = os.path.basename(fn) if fn else ""
+            return f"Inspecting columns: {name}" if name else "Inspecting CSV columns"
+        if tool_name == "query_csv_file":
+            fn = tool_args.get("csv_name", "")
+            q = tool_args.get("sql_query", "")
+            return f"Querying {fn}: {q[:40]}" if fn else "Querying CSV file"
+        if tool_name in ("generate_json_file", "generate_csv_file", "generate_pdf_file", "generate_text_file"):
+            fn = tool_args.get("filename", "")
+            ext = tool_name.replace("generate_", "").replace("_file", "").upper()
+            return f"Generating {ext}: {fn}" if fn else f"Generating {ext} file"
+        # --- Python execution tools ---
+        if tool_name == "save_and_run_python":
+            fn = tool_args.get("file_name", "")
+            return f"Save & run: {fn}" if fn else "Saving and running Python script"
+        if tool_name == "pip_install_package":
+            pkg = tool_args.get("package_name", "")
+            return f"pip install {pkg}" if pkg else "Installing Python package"
+        # --- SQL tools ---
+        if tool_name == "sql_query":
+            q = tool_args.get("query", "")
+            return f"SQL: {q[:60]}" if q else "Running SQL query"
+        if tool_name == "sql_list_tables":
+            return "Listing database tables"
+        if tool_name == "sql_describe_table":
+            tbl = tool_args.get("table_name", "")
+            return f"Describing table: {tbl}" if tbl else "Describing table schema"
+        if tool_name == "sql_load_csv":
+            fn = tool_args.get("file_path", "")
+            tbl = tool_args.get("table_name", "")
+            name = os.path.basename(fn) if fn else ""
+            return f"Loading {name} -> {tbl}" if name and tbl else f"Loading {name} into DB" if name else "Loading CSV into database"
+        if tool_name == "sql_load_excel":
+            fn = tool_args.get("file_path", "")
+            tbl = tool_args.get("table_name", "")
+            name = os.path.basename(fn) if fn else ""
+            return f"Loading {name} -> {tbl}" if name and tbl else f"Loading {name} into DB" if name else "Loading Excel into database"
+        # --- Visualization tools ---
+        if tool_name == "create_bar_chart":
+            title = tool_args.get("title", "")
+            return f"Bar chart: {title}" if title else "Creating bar chart"
+        if tool_name == "create_line_chart":
+            title = tool_args.get("title", "")
+            return f"Line chart: {title}" if title else "Creating line chart"
+        if tool_name == "create_pie_chart":
+            title = tool_args.get("title", "")
+            return f"Pie chart: {title}" if title else "Creating pie chart"
+        if tool_name == "create_scatter_plot":
+            title = tool_args.get("title", "")
+            return f"Scatter plot: {title}" if title else "Creating scatter plot"
+        if tool_name == "create_histogram":
+            title = tool_args.get("title", "")
+            col = tool_args.get("column", "")
+            return f"Histogram: {title}" if title else f"Histogram of {col}" if col else "Creating histogram"
+        # --- Pandas tools ---
+        if tool_name == "pandas_read_csv":
+            fn = tool_args.get("filepath_or_buffer", "")
+            df_name = tool_args.get("dataframe_name", "")
+            name = os.path.basename(fn) if fn else ""
+            return f"Read CSV {name} -> {df_name}" if name else "Reading CSV into DataFrame"
+        if tool_name == "pandas_read_excel":
+            fn = tool_args.get("file_path", "")
+            df_name = tool_args.get("dataframe_name", "")
+            name = os.path.basename(fn) if fn else ""
+            return f"Read Excel {name} -> {df_name}" if name else "Reading Excel into DataFrame"
+        if tool_name == "pandas_read_json":
+            fn = tool_args.get("path_or_buf", "")
+            df_name = tool_args.get("dataframe_name", "")
+            name = os.path.basename(fn) if fn else ""
+            return f"Read JSON {name} -> {df_name}" if name else "Reading JSON into DataFrame"
+        if tool_name == "pandas_read_parquet":
+            fn = tool_args.get("path", "")
+            df_name = tool_args.get("dataframe_name", "")
+            name = os.path.basename(fn) if fn else ""
+            return f"Read Parquet {name} -> {df_name}" if name else "Reading Parquet into DataFrame"
+        if tool_name == "pandas_head":
+            df_name = tool_args.get("dataframe_name", "")
+            n = tool_args.get("n", 5)
+            return f"Head {df_name} (n={n})" if df_name else "Viewing first rows"
+        if tool_name == "pandas_tail":
+            df_name = tool_args.get("dataframe_name", "")
+            n = tool_args.get("n", 5)
+            return f"Tail {df_name} (n={n})" if df_name else "Viewing last rows"
+        if tool_name == "pandas_describe":
+            df_name = tool_args.get("dataframe_name", "")
+            return f"Describe {df_name}" if df_name else "Computing statistics"
+        if tool_name == "pandas_info":
+            df_name = tool_args.get("dataframe_name", "")
+            return f"Info {df_name}" if df_name else "Inspecting DataFrame structure"
+        if tool_name == "pandas_shape":
+            df_name = tool_args.get("dataframe_name", "")
+            return f"Shape of {df_name}" if df_name else "Getting DataFrame dimensions"
+        if tool_name == "pandas_columns":
+            df_name = tool_args.get("dataframe_name", "")
+            return f"Columns of {df_name}" if df_name else "Listing columns"
+        if tool_name == "pandas_dtypes":
+            df_name = tool_args.get("dataframe_name", "")
+            return f"Dtypes of {df_name}" if df_name else "Checking data types"
+        if tool_name == "pandas_null_counts":
+            df_name = tool_args.get("dataframe_name", "")
+            return f"Null analysis: {df_name}" if df_name else "Counting null values"
+        if tool_name == "pandas_filter":
+            df_name = tool_args.get("dataframe_name", "")
+            cond = tool_args.get("condition", "")
+            return f"Filter {df_name}: {cond[:40]}" if df_name else "Filtering rows"
+        if tool_name == "pandas_select":
+            df_name = tool_args.get("dataframe_name", "")
+            cols = tool_args.get("columns", [])
+            col_str = ", ".join(cols[:3]) if isinstance(cols, list) else str(cols)
+            return f"Select from {df_name}: {col_str[:40]}" if df_name else "Selecting columns"
+        if tool_name == "pandas_sort":
+            df_name = tool_args.get("dataframe_name", "")
+            by = tool_args.get("by", "")
+            asc = "asc" if tool_args.get("ascending", True) else "desc"
+            return f"Sort {df_name} by {by} {asc}" if df_name else "Sorting DataFrame"
+        if tool_name == "pandas_groupby":
+            df_name = tool_args.get("dataframe_name", "")
+            by = tool_args.get("by", "")
+            agg = tool_args.get("agg", "")
+            return f"GroupBy {df_name}: {by}.{agg}()" if df_name else "Grouping data"
+        if tool_name == "pandas_join":
+            df_name = tool_args.get("dataframe_name", "")
+            other = tool_args.get("other", "")
+            how = tool_args.get("how", "left")
+            on = tool_args.get("on", "")
+            return f"Join {df_name} + {other} ({how} on {on})" if df_name else "Joining DataFrames"
+        if tool_name == "pandas_add_column":
+            df_name = tool_args.get("dataframe_name", "")
+            col = tool_args.get("column", "")
+            expr = tool_args.get("expression", "")
+            return f"Add column {col} = {expr[:30]}" if col else "Adding calculated column"
+        if tool_name == "pandas_drop_columns":
+            df_name = tool_args.get("dataframe_name", "")
+            cols = tool_args.get("columns", [])
+            col_str = ", ".join(cols[:3]) if isinstance(cols, list) else str(cols)
+            return f"Drop columns from {df_name}: {col_str[:30]}" if df_name else "Dropping columns"
+        if tool_name == "pandas_drop_na":
+            df_name = tool_args.get("dataframe_name", "")
+            how = tool_args.get("how", "any")
+            return f"Drop nulls ({how}) from {df_name}" if df_name else "Dropping null rows"
+        if tool_name == "pandas_fill_na":
+            df_name = tool_args.get("dataframe_name", "")
+            val = tool_args.get("value", "")
+            return f"Fill nulls in {df_name} with {val}" if df_name else "Filling null values"
+        if tool_name == "pandas_to_csv":
+            df_name = tool_args.get("dataframe_name", "")
+            path = tool_args.get("path", "")
+            name = os.path.basename(path) if path else ""
+            return f"Export {df_name} -> {name}" if df_name and name else "Exporting to CSV"
+        if tool_name == "pandas_to_excel":
+            df_name = tool_args.get("dataframe_name", "")
+            path = tool_args.get("path", "")
+            name = os.path.basename(path) if path else ""
+            return f"Export {df_name} -> {name}" if df_name and name else "Exporting to Excel"
+        if tool_name == "pandas_list_dataframes":
+            return "Listing DataFrames in memory"
+        if tool_name == "pandas_delete_dataframe":
+            df_name = tool_args.get("dataframe_name", "")
+            return f"Deleting DataFrame: {df_name}" if df_name else "Deleting DataFrame"
+        # Fallback: use TOOL_DESCRIPTIONS dict, or convert tool_name to readable form
+        if tool_name in tool_descriptions:
+            return tool_descriptions[tool_name]
+        # Convert snake_case tool name to readable: "run_terminal_command" -> "Running terminal command"
+        readable = tool_name.replace("_", " ").strip()
+        if readable:
+            readable = readable[0].upper() + readable[1:]
+        return readable or tool_name
 
     def _prompt_user(self, session: PromptSession) -> str:
         """
@@ -745,7 +999,7 @@ class ArchCodeCliRuntime:
             layout=layout,
             key_bindings=final_kb,
             full_screen=False,
-            style=CliTheme.PROMPT_STYLE,
+            style=CliTheme.get_prompt_style(),
             mouse_support=False,
         )
 
@@ -771,7 +1025,7 @@ class ArchCodeCliRuntime:
             for t in running:
                 t.cancel_event.set()
 
-        self.console.print("[#ff8888]Goodbye![/#ff8888]")
+        self.console.print(f"[{CliTheme._get_accent_color()}]Goodbye![/{CliTheme._get_accent_color()}]")
         return True
 
     def _run_repl_loop(self, runtime: RuntimeImports) -> None:
@@ -825,7 +1079,7 @@ class ArchCodeCliRuntime:
                     emoji = "✓" if done.status.value == "completed" else "✗"
                     self.console.print()
                     self.console.print(
-                        f"[bold #ff8888]{emoji} Task #{done.display_id} finished:[/bold #ff8888] {done.query[:60]}"
+                        f"[bold {CliTheme._get_accent_color()}]{emoji} Task #{done.display_id} finished:[/bold {CliTheme._get_accent_color()}] {done.query[:60]}"
                     )
                     if done.final_response:
                         self.console.print(
@@ -850,11 +1104,12 @@ class ArchCodeCliRuntime:
 
                 # Handle slash commands (pass empty list — Agno manages history internally)
                 if cmd_handler.handle_command(user_input, []):
-                    # If the model or API key was changed via slash commands, recreate agent
+                    # If the model, API key, or agent mode was changed via slash commands, recreate agent
                     current_agent_model_id = getattr(self.agent.model, "id", None) if self.agent else None
                     current_agent_api_key = getattr(self.agent.model, "api_key", None) if self.agent else None
+                    agent_mode_changed = getattr(config, "_agent_mode_changed", False)
 
-                    if self.agent and (current_agent_model_id != config.model or current_agent_api_key != config.openrouter_api_key):
+                    if self.agent and (agent_mode_changed or current_agent_model_id != config.model or current_agent_api_key != config.openrouter_api_key):
                         try:
                             old_session_id = getattr(self.agent, "session_id", None)
                             _extra = []
@@ -868,12 +1123,24 @@ class ArchCodeCliRuntime:
                                 _extra.extend(_mcp_mgr.get_tools())
                             except Exception:
                                 pass
-                            self.agent = runtime.create_agent(
-                                session_id=old_session_id,
-                                extra_tools=_extra if _extra else None,
-                                skills=None,
-                            )
+                            # Create the right agent based on current mode
+                            if config.agent_mode == "data":
+                                from app.agents.data.agent import create_data_agent
+                                from app.agents.agent_graph import RunEvent as DataRunEvent
+                                self.agent = create_data_agent(
+                                    session_id=old_session_id,
+                                    extra_tools=_extra if _extra else None,
+                                )
+                                self.run_event_cls = DataRunEvent
+                            else:
+                                self.agent = runtime.create_agent(
+                                    session_id=old_session_id,
+                                    extra_tools=_extra if _extra else None,
+                                    skills=None,
+                                )
+                                self.run_event_cls = runtime.RunEvent
                             agent = self.agent  # keep local alias in sync
+                            config._agent_mode_changed = False  # reset the flag
                         except Exception as _e:
                             self.console.print(f"[dim]Agent recreation failed: {_e}[/dim]")
                     continue
@@ -883,6 +1150,7 @@ class ArchCodeCliRuntime:
                     or getattr(config, "groq_api_key", None)
                     or getattr(config, "openai_api_key", None)
                     or getattr(config, "anthropic_api_key", None)
+                    or getattr(config, "together_api_key", None)
                     or getattr(config, "access_token", None)
                 )
                 if not has_any_key:
@@ -948,6 +1216,30 @@ class ArchCodeCliRuntime:
                     "search_codebase_graph": "Searching code graph",
                     "axon_context": "Analyzing symbol context",
                     "axon_impact": "Analyzing blast radius",
+                    # Data agent tools
+                    "search_files": "Searching files",
+                    "save_file": "Saving file",
+                    "read_file_chunk": "Reading file chunk",
+                    "run_query": "Running DuckDB query",
+                    "show_tables": "Listing tables",
+                    "describe_table": "Describing table",
+                    "inspect_query": "Inspecting query",
+                    "summarize_table": "Summarizing table",
+                    "create_table_from_path": "Loading file into table",
+                    "export_table_to_path": "Exporting table",
+                    "load_local_path_to_table": "Loading file into table",
+                    "load_local_csv_to_table": "Loading CSV into table",
+                    "run_sql_query": "Running SQL query",
+                    "list_tables": "Listing tables",
+                    "run_python_code": "Running Python code",
+                    "run_python_file_return_variable": "Running Python file",
+                    "run_shell_command": "Running shell command",
+                    "read_csv_file": "Reading CSV file",
+                    "query_csv_file": "Querying CSV file",
+                    "generate_json_file": "Generating JSON file",
+                    "generate_csv_file": "Generating CSV file",
+                    "generate_pdf_file": "Generating PDF file",
+                    "generate_text_file": "Generating text file",
                 }
 
                 # Loop: run agent, handle PLAN_PENDING until user accepts/rejects or we finish
@@ -985,10 +1277,11 @@ class ArchCodeCliRuntime:
                     content_buffer = ""
                     run_metrics = None
 
+                    _ac = CliTheme._get_accent_color()
                     with self.console.status(
-                        f"[bold #ff8888]●[/bold #ff8888] Thinking...",
+                        f"[bold {_ac}]●[/bold {_ac}] Thinking...",
                         spinner="dots",
-                        spinner_style="#ff8888",
+                        spinner_style=_ac,
                     ) as status:
                         approval_gate.set_status(status)
                         stream = agent.run(
@@ -1040,9 +1333,9 @@ class ArchCodeCliRuntime:
 
                             if approval_gate.is_rejected():
                                 break
-                            if chunk.event == runtime.RunEvent.tool_call_started:
+                            if chunk.event == self.run_event_cls.tool_call_started:
                                 tool_name = (
-                                    chunk.tool.tool_name
+                                    chunk.tool.tool_name.strip()
                                     if hasattr(chunk, "tool") and chunk.tool
                                     else ""
                                 )
@@ -1128,14 +1421,85 @@ class ArchCodeCliRuntime:
                                         "search_skills",
                                         "view_context",
                                         "read_file_chunked",
+                                        "search_files",
+                                        "list_files",
+                                        "read_file_chunk",
+                                        "show_tables",
+                                        "describe_table",
+                                        "list_tables",
+                                        "summarize_table",
+                                        "inspect_query",
+                                        "read_csv_file",
+                                        "get_csv_columns",
+                                        "sql_list_tables",
+                                        "sql_describe_table",
+                                        "pandas_head",
+                                        "pandas_tail",
+                                        "pandas_describe",
+                                        "pandas_info",
+                                        "pandas_shape",
+                                        "pandas_columns",
+                                        "pandas_dtypes",
+                                        "pandas_null_counts",
+                                        "pandas_list_dataframes",
                                     ]:
                                         phase = "Explore"
                                     elif tool_name in [
                                         "write_to_file_tool",
                                         "edit_file",
                                         "whole_file_update",
+                                        "save_file",
+                                        "generate_json_file",
+                                        "generate_csv_file",
+                                        "generate_pdf_file",
+                                        "generate_text_file",
+                                        "export_table_to_path",
+                                        "pandas_to_csv",
+                                        "pandas_to_excel",
+                                        "save_and_run_python",
                                     ]:
                                         phase = "Implement"
+                                    elif tool_name in [
+                                        "run_query",
+                                        "run_sql_query",
+                                        "query_csv_file",
+                                        "create_table_from_path",
+                                        "load_local_path_to_table",
+                                        "load_local_csv_to_table",
+                                        "sql_query",
+                                        "sql_load_csv",
+                                        "sql_load_excel",
+                                        "pandas_read_csv",
+                                        "pandas_read_excel",
+                                        "pandas_read_json",
+                                        "pandas_read_parquet",
+                                        "pandas_filter",
+                                        "pandas_select",
+                                        "pandas_sort",
+                                        "pandas_groupby",
+                                        "pandas_join",
+                                        "pandas_add_column",
+                                        "pandas_drop_columns",
+                                        "pandas_drop_na",
+                                        "pandas_fill_na",
+                                        "pandas_delete_dataframe",
+                                    ]:
+                                        phase = "Data Query"
+                                    elif tool_name in [
+                                        "run_python_code",
+                                        "run_python_file_return_variable",
+                                        "run_shell_command",
+                                        "pip_install_package",
+                                    ]:
+                                        phase = "Execute"
+                                    elif tool_name in [
+                                        "create_bar_chart",
+                                        "create_line_chart",
+                                        "create_pie_chart",
+                                        "create_scatter_plot",
+                                        "create_histogram",
+                                    ]:
+                                        phase = "Visualize"
                                     elif tool_name == "run_terminal_command":
                                         phase = "Verify"
                                     elif tool_name and tool_name.startswith("mcp__"):
@@ -1148,20 +1512,22 @@ class ArchCodeCliRuntime:
                                     else:
                                         phase = "System Action"
 
+                                    _accent = CliTheme._get_accent_color()
                                     self.console.print()
                                     self.console.print(
-                                        f"● [bold #ff8888]{phase}[/bold #ff8888] ([{tool_name}] {desc})"
+                                        f"● [bold {_accent}]{phase}[/bold {_accent}]"
                                     )
 
                                 self.console.print(
-                                    f"  L [dim][{tool_name}] {desc}[/dim]"
+                                    f"  [#b0b0b0]L[/#b0b0b0] [#b0b0b0]{desc}[/#b0b0b0]"
                                 )
 
                                 # Update spinner
                                 total_toks = total_usage.get("total_tokens", 0)
                                 shown_toks = self._display_tokens(total_toks)
+                                _sa = CliTheme._get_accent_color()
                                 status.update(
-                                    f"[bold #ff8888]●[/bold #ff8888] Running tools... ({shown_toks/1000:.1f}k tokens)"
+                                    f"[bold {_sa}]●[/bold {_sa}] Running tools... ({shown_toks/1000:.1f}k tokens)"
                                 )
 
                                 # Update plan tracker on tool start
@@ -1171,8 +1537,30 @@ class ArchCodeCliRuntime:
                                     if _affected:
                                         self.console.print(_active_tracker.render())
 
-                            elif chunk.event == runtime.RunEvent.tool_call_completed:
+                            elif chunk.event == self.run_event_cls.tool_call_completed:
                                 supervisor_call_count += 1
+
+                                # Display tool output if present (data agent)
+                                # Skip noisy tools (file listings, raw reads, searches)
+                                _tool_output = getattr(chunk, "content", None)
+                                _last_tool = tool_name if 'tool_name' in dir() else ""
+                                _skip_tools = {
+                                    "list_files", "search_files", "read_file",
+                                    "run_shell_command", "save_file",
+                                }
+                                if _tool_output and _last_tool not in _skip_tools:
+                                    status.stop()
+                                    self.console.print()
+                                    # Strip ANSI escape codes
+                                    import re as _re
+                                    _clean = _re.sub(r'\x1b\[[0-9;]*m', '', _tool_output)
+                                    _show = _clean if len(_clean) <= 600 else _clean[:600] + "..."
+                                    # Indent each line, off-white color
+                                    _padded = "\n".join(
+                                        f"     {ln}" for ln in _show.split("\n")
+                                    )
+                                    self.console.print(f"[#b0b0b0]{_padded}[/#b0b0b0]")
+                                    status.start()
 
                                 # Update plan tracker on tool completion
                                 _active_tracker = get_tracker()
@@ -1193,7 +1581,7 @@ class ArchCodeCliRuntime:
 
                             elif (
                                 chunk.event
-                                == runtime.RunEvent.model_request_completed
+                                == self.run_event_cls.model_request_completed
                             ):
                                 # Live token tracking — ModelRequestCompletedEvent
                                 # has input_tokens/output_tokens/total_tokens as direct attrs
@@ -1214,14 +1602,14 @@ class ArchCodeCliRuntime:
                                         total_usage["total_tokens"]
                                     )
                                     status.update(
-                                        f"[bold #ff8888]●[/bold #ff8888] Running tools... ({shown_toks/1000:.1f}k tokens)"
+                                        f"[bold {_ac}]●[/bold {_ac}] Running tools... ({shown_toks/1000:.1f}k tokens)"
                                     )
 
-                            elif chunk.event == runtime.RunEvent.run_content:
+                            elif chunk.event == self.run_event_cls.run_content:
                                 if hasattr(chunk, "content") and chunk.content:
                                     content_buffer += chunk.content
 
-                            elif chunk.event == runtime.RunEvent.run_completed:
+                            elif chunk.event == self.run_event_cls.run_completed:
                                 # Extract final metrics from completed run
                                 if hasattr(chunk, "metrics") and chunk.metrics:
                                     run_metrics = chunk.metrics
@@ -1384,7 +1772,7 @@ class ArchCodeCliRuntime:
                     net_tool_tokens = max(0, current_tool_tokens - _prompt_overhead)
                     shown_net_tool_tokens = self._display_tokens(net_tool_tokens)
                     self.console.print(
-                        f"  L [#ff8888]Done[/#ff8888] ({tool_use_count} tool uses · {shown_net_tool_tokens/1000:.1f}k tokens · {duration}s)"
+                        f"  L [{CliTheme._get_accent_color()}]Done[/{CliTheme._get_accent_color()}] ({tool_use_count} tool uses · {shown_net_tool_tokens/1000:.1f}k tokens · {duration}s)"
                     )
                     self.console.print("  [dim](ctrl+o to expand)[/dim]")
                     tool_use_count = 0
@@ -1430,7 +1818,7 @@ class ArchCodeCliRuntime:
 
                     self.console.print()  # breathing room before diff summary
                     self.console.print(
-                        f"[bold #ff8888]✎ Agent modified {len(changed)} file(s). Review in your editor.[/bold #ff8888]"
+                        f"[bold {CliTheme._get_accent_color()}]✎ Agent modified {len(changed)} file(s). Review in your editor.[/bold {CliTheme._get_accent_color()}]"
                     )
                     for fp in changed:
                         self.console.print(f"  [dim]• {os.path.relpath(fp)}[/dim]")
@@ -1455,7 +1843,9 @@ class ArchCodeCliRuntime:
         runtime = self._load_runtime_imports()
         # self._bootstrap_rag()  # RAG index creation disabled for now
         self._bootstrap_mcp()
-        self._bootstrap_axon()
+        # Skip Axon for data agent mode
+        if config.agent_mode != "data":
+            self._bootstrap_axon()
         self._bootstrap_skills()
         self._build_command_handler(runtime)
         session = self._build_prompt_session()

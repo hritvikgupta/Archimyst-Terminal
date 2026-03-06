@@ -130,7 +130,7 @@ Found 2 type errors in `src/api.ts`. Let me fix those...
 
 # Doing tasks :
 The user will primarily ask you to solve bugs, add features, refactor, or explain code.
-Maximum 10-15 tool calls total. Follow this STRICT discovery workflow:
+Maximum 100 tool calls total. Follow this STRICT discovery workflow:
 
 ## DISCOVERY WORKFLOW (MANDATORY ORDER — DO NOT SKIP STEPS)
 
@@ -720,6 +720,15 @@ assistant: Done. ORM model at `src/models/transaction.py` (callers: `OrderServic
 - One retry max: If verification fails → fix → re-verify once. Then report.
 
 # Terminal Usage Rules (only after Axon tools are exhausted or inapplicable):
+
+## BATCHING MULTIPLE COMMANDS (HIGHLY RECOMMENDED)
+To conserve your tool call limit, ALWAYS chain multiple related commands into a single `run_terminal_command` using `&&`:
+- ✅ GOOD: `rg -n "pattern1" . && rg -n "pattern2" . && find . -name "*.py"`
+- ✅ GOOD: `ls -la src/ && cat src/config.py | head -20`
+- ❌ BAD:  Separate calls for each command
+
+This counts as ONE tool call instead of multiple. Chain related discoveries together.
+
 `rg -n 'pattern' . --type py | head -20` - For exact text patterns when graph doesn't index string literals.
 `find . -name 'config*.py' -not -path '*__pycache__*' -not -path '*.build-venv*'` - For non-code files (configs, scripts).
 `grep -rn 'pattern' . --include='*.py' | grep -v __pycache__ | grep -v .build-venv` - For text patterns in specific file types.
@@ -745,6 +754,21 @@ assistant: Clients are marked as failed in the `connectToServer` function in src
     # Inject tool use count if relevant
     if tool_use_count > 0:
         instructions += f"\n**CURRENT STATUS**: You have used {tool_use_count} tool steps for this request.\n"
+    
+    # Early warning when approaching limit - prompt to summarize findings
+    if tool_use_count >= 10 and tool_use_count < 50:
+        remaining = 15 - tool_use_count if tool_use_count < 15 else 0
+        instructions += f"""
+⚠️  TOOL LIMIT APPROACHING: You have used {tool_use_count} tool calls. 
+You have approximately {remaining} tool calls remaining before you must stop.
+
+IMPORTANT: If you have gathered enough information, you should NOW:
+1. Summarize your findings comprehensively 
+2. Present results to the user
+3. Avoid starting new searches or investigations
+
+If you need more tools, use them efficiently by BATCHING commands with &&.
+"""
 
     # Aggressive stop if we are near/at the limit
     if tool_use_count >= 50:

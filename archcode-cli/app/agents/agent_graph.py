@@ -518,6 +518,13 @@ def _get_model(role: str = "coder"):
             base_url="https://api.groq.com/openai/v1",
         )
 
+    if provider == "together":
+        return ChatOpenAI(
+            model=model_id,
+            api_key=config.together_api_key,
+            base_url="https://api.together.xyz/v1",
+        )
+
     # Default: OpenRouter
     return ChatOpenAI(
         model=model_id,
@@ -558,6 +565,16 @@ def _make_agent_node(extra_tools: Optional[list] = None):
         #         "You should have enough context now. Create your plan with exact "
         #         "file paths, line numbers, and SEARCH/REPLACE code blocks. Stop searching."
         #     ))]
+
+        # Early warning at 10 tool calls to prompt agent to wrap up
+        tool_use_count_early = sum(1 for m in messages if isinstance(m, ToolMessage))
+        if tool_use_count_early == 10:
+            messages = list(messages) + [SystemMessage(content=(
+                "⚠️ TOOL LIMIT WARNING: You have used 10 tool calls. "
+                "You are approaching the tool use limit (15 max). "
+                "If you have gathered sufficient information, summarize your findings NOW. "
+                "Avoid starting new searches. Present what you've discovered to the user."
+            ))]
 
         # Threshold: fire well before recursion_limit=50 so we always get a clean response
         should_stop = len(turn_msgs) > 40
@@ -627,18 +644,15 @@ def _make_agent_node(extra_tools: Optional[list] = None):
             response = model_with_tools.invoke(
                 _system_messages + trimmed
             )
-            # DEBUG: Log what the model is doing
+            # Filter out search_codebase calls with empty/short queries
             if response.tool_calls:
                 valid_calls = []
                 for tc in response.tool_calls:
-                    # If it's a search call with an empty query, ignore it
                     if tc["name"] == "search_codebase":
                         query_val = tc.get("args", {}).get("query", "")
                         if not query_val or len(str(query_val).strip()) < 3:
-                            continue # Skip this call
+                            continue
                     valid_calls.append(tc)
-                
-                # Update the response with only valid calls
                 response.tool_calls = valid_calls
         except Exception as exc:
             return {
@@ -650,6 +664,35 @@ def _make_agent_node(extra_tools: Optional[list] = None):
                 "active_skills": [],
                 "skills_read": [],
             }
+
+        # Detect empty response after tool execution — retry without tools
+        content_str = response.content if isinstance(response.content, str) else str(response.content or "")
+        has_recent_tools = any(isinstance(m, ToolMessage) for m in list(messages)[-10:])
+        if not content_str.strip() and not response.tool_calls and has_recent_tools:
+            try:
+                retry_response = model.invoke(
+                    _system_messages + trimmed + [SystemMessage(content=(
+                        "You just executed tools and received results above. "
+                        "Summarize what you found and respond to the user's request. "
+                        "Do NOT make any tool calls — respond with text only."
+                    ))]
+                )
+                if retry_response.content:
+                    response = retry_response
+            except Exception:
+                pass  # fall through with original empty response
+
+        # If still empty after retry, synthesize a minimal response from tool results
+        if not (response.content if isinstance(response.content, str) else str(response.content or "")).strip() and not response.tool_calls:
+            tool_results = [
+                m.content for m in list(messages)[-10:]
+                if isinstance(m, ToolMessage) and m.content
+            ]
+            if tool_results:
+                fallback = "Here are the results from the tools I ran:\n\n" + "\n\n---\n\n".join(
+                    str(r)[:2000] for r in tool_results[-3:]
+                )
+                response = AIMessage(content=fallback, name="Archimyst")
 
         # Plan detection takes PRIORITY over tool calls — if the model outputs
         # "PLAN AWAITING APPROVAL" we route to PLAN_PENDING even if it also
@@ -680,23 +723,25 @@ def _make_tool_node(extra_tools: Optional[list] = None):
     def dynamic_tool_node(state: AgentState):
         messages = list(state["messages"])
 
-        # Deduplicate tool calls on the last AIMessage
+        # Sanitize tool call names and deduplicate on the last AIMessage
         if messages and isinstance(messages[-1], AIMessage):
             last = messages[-1]
             if getattr(last, "tool_calls", None):
                 seen: set = set()
                 deduped = []
                 for tc in last.tool_calls:
+                    # Strip whitespace from tool names (LLM sometimes adds leading spaces)
+                    tc["name"] = tc["name"].strip()
                     key = (tc["name"], str(tc.get("args", {})))
                     if key not in seen:
                         seen.add(key)
                         deduped.append(tc)
-                if len(deduped) < len(last.tool_calls):
-                    messages[-1] = AIMessage(
-                        content=last.content,
-                        tool_calls=deduped,
-                        id=last.id,
-                    )
+                # Always rebuild to apply stripped names
+                messages[-1] = AIMessage(
+                    content=last.content,
+                    tool_calls=deduped,
+                    id=last.id,
+                )
 
         all_tools = _get_all_tools(extra_tools)
         node = ToolNode(all_tools)
@@ -863,6 +908,25 @@ class LangGraphAgent:
 
         # Persist history for multi-turn conversations
         self._history = current_messages + all_new_messages
+
+        # Safety net: if the graph completed but no run_content was ever yielded,
+        # extract the last AI response or synthesize one from tool results
+        has_content = any(
+            isinstance(m, AIMessage) and not m.tool_calls and m.content
+            for m in all_new_messages
+        )
+        if not has_content and all_new_messages:
+            # Try to find any AIMessage content (even from tool-calling messages)
+            fallback_parts = []
+            for m in reversed(all_new_messages):
+                if isinstance(m, ToolMessage) and m.content:
+                    fallback_parts.append(str(m.content)[:1500])
+                    if len(fallback_parts) >= 3:
+                        break
+            if fallback_parts:
+                fallback_parts.reverse()
+                fallback = "Here are the results from the tools I ran:\n\n" + "\n\n---\n\n".join(fallback_parts)
+                yield AgentEvent(event=RunEvent.run_content, content=fallback)
 
         metrics = Metrics(
             input_tokens=total_usage["input_tokens"],
